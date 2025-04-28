@@ -7,13 +7,26 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { Copy } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import items, { GridItem } from "virtual:gridlabs-map";
 import { Link as RouterLink, Outlet } from "react-router-dom";
 
 const GridView = () => {
   const [copied, setCopied] = useState(false);
+  const [thumbs, setThumbs] = useState<Record<string, string>>({});
   const cardBg = useColorModeValue("gray.50", "gray.700");
+
+  // Set up Firebase Storage URLs for thumbnails
+  useEffect(() => {
+    const thumbUrls: Record<string, string> = {};
+    const cdnBase = `https://firebasestorage.googleapis.com/v0/b/${import.meta.env.VITE_FIREBASE_BUCKET || 'gridlabs-b59b7.appspot.com'}/o/gridshots/${import.meta.env.VITE_COMMIT_SHA || 'local'}`;
+
+    items.forEach((file: GridItem) => {
+      thumbUrls[file.name] = `${cdnBase}%2F${encodeURIComponent(file.name.replace(/[^a-z0-9]/gi, "_") + ".png")}?alt=media`;
+    });
+
+    setThumbs(thumbUrls);
+  }, [items]);
 
   // helper for share-link copy
   const copyShare = () => {
@@ -56,6 +69,12 @@ const GridView = () => {
               to={`/__grid/preview?id=${file.id}`}
               display="block"
               height="200px"
+              style={{
+                backgroundImage: thumbs[file.name] ? `url(${thumbs[file.name]})` : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              }}
             />
           </LinkBox>
         ))}
