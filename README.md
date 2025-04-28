@@ -29,6 +29,8 @@ It's like Storybook, but without stories, routes, or manual wiring—drop a comp
 | **Components detected** | `HelloCard.tsx`, `Intro.tsx`, `Landing.tsx` (demo set) |
 | **Snapshot Infrastructure** | Playwright captures screenshots, uploads to Firebase Storage |
 | **Thumbnail Display** | Grid cards show component snapshots as backgrounds |
+| **Diff Engine** | Sharp compares images, generates diff PNGs for >0.1% changes |
+| **AI Summary** | GPT-4o generates one-line descriptions of visual changes |
 
 You can try the live instance here 👉 **https://gridlabs.vercel.app/__grid**
 
@@ -44,11 +46,19 @@ You can try the live instance here 👉 **https://gridlabs.vercel.app/__grid**
 
 > ⭐ Value: Anyone can scroll the grid and see exactly how each component looked for that commit.
 
-### 🔄 Phase D  — Smart diff & AI summary (NEXT UP)
+### ✅ Phase D  — Smart diff & AI summary (COMPLETED)
 
-* Compare current PNG vs. previous base with Sharp  
-* If >0.1 % pixels changed, store diff image  
-* Call GPT-4o to generate a one-line summary ("Button corner-radius changed from 4 px to 8 px")
+* ✅ Compare current PNG vs. previous base with Sharp  
+* ✅ If >0.1 % pixels changed, store diff image  
+* ✅ Call GPT-4o to generate a one-line summary ("Button corner-radius changed from 4 px to 8 px")
+* 🔄 Integrate diff summaries with grid UI (IN PROGRESS)
+
+### 🔄 Phase D.2  — UI Integration for Diffs (NEXT UP)
+
+* Add visual indicators (badges) to components with changes
+* Show AI summaries on hover/click for changed components
+* Add a "Changes" tab/panel to list all components with differences
+* Fetch and display diff summaries in the grid UI
 
 ### Phase E  — Workflow integrations
 

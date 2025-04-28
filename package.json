@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "format": "prettier --write \"src/**/*.{ts,tsx}\""
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "snap": "dotenv -e .env.local -- cross-env vite build && dotenv -e .env.local -- cross-env concurrently -k \"vite preview --port 4175\" \"wait-on http://localhost:4175 && node scripts/flexible-snapshot.js\"",
+    "diff": "dotenv -e .env.local -- node scripts/diff-snapshots.js"
   },
   "dependencies": {
     "@chakra-ui/react": "^2.8.2",
@@ -23,6 +25,7 @@
     "react-router-dom": "^6.18.0"
   },
   "devDependencies": {
+    "@google-cloud/storage": "^7.16.0",
     "@testing-library/jest-dom": "^6.1.4",
     "@testing-library/react": "^14.0.0",
     "@types/node": "^20.9.0",
@@ -31,14 +34,22 @@
     "@typescript-eslint/eslint-plugin": "^6.10.0",
     "@typescript-eslint/parser": "^6.10.0",
     "@vitejs/plugin-react": "^4.1.1",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "dotenv-cli": "^8.0.0",
     "eslint": "^8.53.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.4",
     "fast-glob": "^3.3.2",
     "jsdom": "^22.1.0",
+    "node-fetch": "^2.7.0",
+    "playwright": "^1.52.0",
     "prettier": "^3.0.3",
+    "sharp": "^0.32.6",
+    "ts-node": "^10.9.2",
     "typescript": "^5.2.2",
     "vite": "^5.0.0",
-    "vitest": "^0.34.6"
+    "vitest": "^0.34.6",
+    "wait-on": "^7.2.0"
   }
 }
