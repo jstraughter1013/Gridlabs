@@ -12,7 +12,12 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "snap": "dotenv -e .env.local -- cross-env vite build && dotenv -e .env.local -- cross-env concurrently -k \"vite preview --port 4175\" \"wait-on http://localhost:4175 && node scripts/flexible-snapshot.js\"",
-    "diff": "dotenv -e .env.local -- node scripts/diff-snapshots.js"
+    "diff": "dotenv -e .env.local -- node scripts/diff-snapshots.js",
+    "pr-comment": "dotenv -e .env.local -- node scripts/pr-comment-bot.js",
+    "webhook": "dotenv -e .env.local -- node scripts/webhook-notifier.js",
+    "relic-scan": "node scripts/relic-scanner.js",
+    "ci:phase-e": "npm run diff && npm run relic-scan && npm run pr-comment && npm run webhook",
+    "test-slack": "dotenv -e .env.local -- node -e \"const fetch = require('node-fetch'); fetch(process.env.SLACK_WEBHOOK_URL, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({text: 'GridLabs webhook test \ud83d\ude80'})}).then(r => console.log(r.ok ? '\ud83d\udfe5 Slack notification sent!' : '\ud83d\udfe4 Error: ' + r.status))\""
   },
   "dependencies": {
     "@chakra-ui/react": "^2.8.2",
