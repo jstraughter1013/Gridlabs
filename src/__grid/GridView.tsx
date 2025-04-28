@@ -7,7 +7,7 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { Copy } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import items, { GridItem } from "virtual:gridlabs-map";
 import { Link as RouterLink, Outlet } from "react-router-dom";
 
