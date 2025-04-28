@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 
 const GridView = () => (
   <SimpleGrid columns={[1, 2, 3]} spacing={4} p={6}>
-    {items.map(({ id, name }: Pick<GridItem, 'id' | 'name'>) => (
+    {items.map((file: GridItem) => (
       <Box
-        key={id}
+        key={file.id}
         borderWidth="1px"
         borderRadius="lg"
         overflow="hidden"
@@ -14,10 +14,15 @@ const GridView = () => (
       >
         <Box bg="gray.50" p={2}>
           <Text fontSize="sm" isTruncated>
-            {name}
+            {file.name}
           </Text>
         </Box>
-        <Box as={Link} to={`/__grid/preview?id=${id}`} h="240px" w="100%" />
+        <Box
+          as={Link}
+          to={`/__grid/preview?id=${file.id}`}
+          h="240px"
+          w="100%"
+        />
       </Box>
     ))}
   </SimpleGrid>
