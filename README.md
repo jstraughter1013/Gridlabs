@@ -1,45 +1,85 @@
-**Edit a file, create a new file, and clone from Bitbucket in under 2 minutes**
+# GridLabs
 
-When you're done, you can delete the content in this README and update the file with details for others getting started with your repository.
+**Zero-config, component-first UI preview for Vite + React projects**
 
-*We recommend that you open this README in another tab as you perform the tasks below. You can [watch our video](https://youtu.be/0ocf7u76WSo) for a full demo of all the steps in this tutorial. Open the video in a new tab to avoid leaving Bitbucket.*
-
----
-
-## Edit a file
-
-You’ll start by editing this README file to learn how to edit a file in Bitbucket.
-
-1. Click **Source** on the left side.
-2. Click the README.md link from the list of files.
-3. Click the **Edit** button.
-4. Delete the following text: *Delete this line to make a change to the README from Bitbucket.*
-5. After making your change, click **Commit** and then **Commit** again in the dialog. The commit page will open and you’ll see the change you just made.
-6. Go back to the **Source** page.
+GridLabs automatically discovers every `.tsx/.jsx` file under `src/`, builds them with your real app configuration, and lays them out in a share-able grid.  
+It's like Storybook, but without stories, routes, or manual wiring—drop a component in **`src/`**, push to Git, and it appears live in seconds.
 
 ---
 
-## Create a file
+## ✨ Why GridLabs?
 
-Next, you’ll add a new file to this repository.
-
-1. Click the **New file** button at the top of the **Source** page.
-2. Give the file a filename of **contributors.txt**.
-3. Enter your name in the empty file space.
-4. Click **Commit** and then **Commit** again in the dialog.
-5. Go back to the **Source** page.
-
-Before you move on, go ahead and explore the repository. You've already seen the **Source** page, but check out the **Commits**, **Branches**, and **Settings** pages.
+| Pain in current workflow | How GridLabs fixes it |
+| ------------------------ | --------------------- |
+| Manually creating stories / routes for every new component | **Auto-discover plug-in** finds files on `vite dev` and in CI builds |
+| Colleagues can't see WIP UI without pulling code | **Live grid** deployed to Vercel for every commit |
+| Hard to share exact build during design reviews | **Copy-link** button copies `?sha=<commit>` URL so reviewers see the same version |
+| Visual regressions spotted only after QA | (Phase D) **Automated screenshots** + diff & GPT-summary per commit |
 
 ---
 
-## Clone a repository
+## ✅ Current status
 
-Use these steps to clone from SourceTree, our client for using the repository command-line free. Cloning allows you to work on your files locally. If you don't yet have SourceTree, [download and install first](https://www.sourcetreeapp.com/). If you prefer to clone from the command line, see [Clone a repository](https://confluence.atlassian.com/x/4whODQ).
+| Area | Details |
+|------|---------|
+| **Scaffold** | Vite + React + TypeScript + Chakra UI |
+| **Plug-in** | `vite-plugin-gridlabs` emits `virtual:gridlabs-map` (list of components) |
+| **Grid UI** | `/__grid` route with component cards showing live thumbnails |
+| **CI / Hosting** | Bitbucket → Vercel auto-deploy (Production) |
+| **Components detected** | `HelloCard.tsx`, `Intro.tsx`, `Landing.tsx` (demo set) |
+| **Snapshot Infrastructure** | Playwright captures screenshots, uploads to Firebase Storage |
+| **Thumbnail Display** | Grid cards show component snapshots as backgrounds |
 
-1. You’ll see the clone button under the **Source** heading. Click that button.
-2. Now click **Check out in SourceTree**. You may need to create a SourceTree account or log in.
-3. When you see the **Clone New** dialog in SourceTree, update the destination path and name if you’d like to and then click **Clone**.
-4. Open the directory you just created to see your repository’s files.
+You can try the live instance here 👉 **https://gridlabs.vercel.app/__grid**
 
-Now that you're more familiar with your Bitbucket repository, go ahead and add a new file locally. You can [push your change back to Bitbucket with SourceTree](https://confluence.atlassian.com/x/iqyBMg), or you can [add, commit,](https://confluence.atlassian.com/x/8QhODQ) and [push from the command line](https://confluence.atlassian.com/x/NQ0zDQ).
+---
+
+## 🗺 Roadmap
+
+### ✅ Phase C  — Visual snapshots (COMPLETED)
+
+1. ✅ **Snapshot engine** – Playwright screenshots each tile after `vite build`
+2. ✅ **Cloud storage** – PNGs uploaded to Firebase Storage under `gridshots/<commit>/`
+3. ✅ **Thumbnail display** – Grid shows snapshot as card background
+
+> ⭐ Value: Anyone can scroll the grid and see exactly how each component looked for that commit.
+
+### 🔄 Phase D  — Smart diff & AI summary (NEXT UP)
+
+* Compare current PNG vs. previous base with Sharp  
+* If >0.1 % pixels changed, store diff image  
+* Call GPT-4o to generate a one-line summary ("Button corner-radius changed from 4 px to 8 px")
+
+### Phase E  — Workflow integrations
+
+* Bitbucket Pipeline comments a link to the new grid on every PR  
+* Optional Slack / Teams webhook with changed components  
+* Search / filter bar inside grid
+
+### Phase F  — VS Code extension (optional)
+
+* "Open Grid Lab" command starts `vite dev` if needed and opens `/__grid`  
+* Publish to VS Code Marketplace
+
+### Phase G  — UX polish & docs
+
+* Responsive layout & dark-mode tweaks  
+* Logo / branding in navbar  
+* One-page README with GIF demo & installation snippet
+
+### Phase H  — Public beta launch
+
+* Invite 5–10 design-partner teams  
+* Post on r/reactjs & Dev.to  
+* Add Intercom or Slack link for feedback
+
+---
+
+## Contributing / Getting Started Locally
+
+```bash
+git clone https://bitbucket.org/sharedpath/gridlabs.git
+cd gridlabs
+npm install
+npm run dev         # open http://localhost:5173/__grid
+```
