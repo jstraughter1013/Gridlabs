@@ -31,6 +31,8 @@ It's like Storybook, but without stories, routes, or manual wiring—drop a comp
 | **Thumbnail Display** | Grid cards show component snapshots as backgrounds |
 | **Diff Engine** | Sharp compares images, generates diff PNGs for >0.1% changes |
 | **AI Summary** | GPT-4o generates one-line descriptions of visual changes |
+| **Changes Panel** | Drawer UI shows all components with visual changes |
+| **Diff Badges** | Components with changes display a badge with diff percentage |
 
 You can try the live instance here 👉 **https://gridlabs.vercel.app/__grid**
 
@@ -51,16 +53,16 @@ You can try the live instance here 👉 **https://gridlabs.vercel.app/__grid**
 * ✅ Compare current PNG vs. previous base with Sharp  
 * ✅ If >0.1 % pixels changed, store diff image  
 * ✅ Call GPT-4o to generate a one-line summary ("Button corner-radius changed from 4 px to 8 px")
-* 🔄 Integrate diff summaries with grid UI (IN PROGRESS)
+* ✅ Integrate diff summaries with grid UI
 
-### 🔄 Phase D.2  — UI Integration for Diffs (NEXT UP)
+### ✅ Phase D.2  — UI Integration for Diffs (COMPLETED)
 
-* Add visual indicators (badges) to components with changes
-* Show AI summaries on hover/click for changed components
-* Add a "Changes" tab/panel to list all components with differences
-* Fetch and display diff summaries in the grid UI
+* ✅ Add visual indicators (badges) to components with changes
+* ✅ Show AI summaries on hover/click for changed components
+* ✅ Add a "Changes" tab/panel to list all components with differences
+* ✅ Fetch and display diff summaries in the grid UI
 
-### Phase E  — Workflow integrations
+### 🔄 Phase E  — Workflow integrations (NEXT UP)
 
 * Bitbucket Pipeline comments a link to the new grid on every PR  
 * Optional Slack / Teams webhook with changed components  
