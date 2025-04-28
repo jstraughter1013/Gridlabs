@@ -1,10 +1,10 @@
 import { SimpleGrid, Box, Text } from '@chakra-ui/react';
-import items from 'virtual:gridlabs-map';
+import items, { GridItem } from 'virtual:gridlabs-map';
 import { Link } from 'react-router-dom';
 
 const GridView = () => (
   <SimpleGrid columns={[1, 2, 3]} spacing={4} p={6}>
-    {items.map(({ id, name }) => (
+    {items.map(({ id, name }: Pick<GridItem, 'id' | 'name'>) => (
       <Box
         key={id}
         borderWidth="1px"
