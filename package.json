@@ -17,14 +17,26 @@
     "webhook": "dotenv -e .env.local -- node scripts/webhook-notifier.js",
     "relic-scan": "node scripts/relic-scanner.js",
     "ci:phase-e": "npm run diff && npm run relic-scan && npm run pr-comment && npm run webhook",
-    "test-slack": "dotenv -e .env.local -- node -e \"const fetch = require('node-fetch'); fetch(process.env.SLACK_WEBHOOK_URL, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({text: 'GridLabs webhook test \ud83d\ude80'})}).then(r => console.log(r.ok ? '\ud83d\udfe5 Slack notification sent!' : '\ud83d\udfe4 Error: ' + r.status))\""
+    "test-slack": "dotenv -e .env.local -- node -e \"const fetch = require('node-fetch'); fetch(process.env.SLACK_WEBHOOK_URL, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({text: 'GridLabs webhook test 🚀'})}).then(r => console.log(r.ok ? '🟥 Slack notification sent!' : '🟤 Error: ' + r.status))\"",
+    "typecheck": "tsc -p tsconfig.node.json",
+    "build:node": "tsc -p tsconfig.node.json --emitDeclarationOnly false"
   },
   "dependencies": {
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@fastify/jwt": "^9.1.0",
+    "@fastify/rate-limit": "^10.2.2",
+    "@types/archiver": "^6.0.3",
+    "@types/node-fetch": "^2.6.12",
+    "archiver": "^7.0.1",
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "fastify": "^5.3.2",
     "framer-motion": "^10.16.4",
     "lucide-react": "^0.292.0",
+    "nock": "^14.0.4",
+    "ora": "^8.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.18.0"

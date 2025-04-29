@@ -1,0 +1,26 @@
+{
+  "name": "gridlabs-cli",
+  "version": "0.1.0",
+  "description": "GridLabs CLI for uploading and sharing UI components",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "gridlabs": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "archiver": "^5.3.1",
+    "chalk": "^5.3.0",
+    "commander": "^11.0.0",
+    "node-fetch": "^3.3.2",
+    "ora": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/archiver": "^5.3.2",
+    "@types/node": "^20.9.0",
+    "typescript": "^5.2.2"
+  }
+}

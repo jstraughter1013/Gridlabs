@@ -41,6 +41,7 @@ It’s like Storybook, but without stories, routes, or manual wiring—drop a co
 | **Relic-file Scanner** | Detects unused modules & duplicate files |
 | **Search/Filter Bar** | Fuzzy search with `/` hotkey filters grid cards |
 | **Auto-refresh Toast** | Notifies users when a newer build is available |
+| **Cloud v0 Platform** | Share preview links via `npx gridlabs upload` command |
 
 Try the live instance 👉 **https://gridlabs.vercel.app/__grid**
 
@@ -77,18 +78,26 @@ Try the live instance 👉 **https://gridlabs.vercel.app/__grid**
 * Search/filter bar with `/` hotkey for instant filtering
 * Auto-refresh toast notifies users when newer builds are available
 
-### 🔄 Phase F — VS Code extension (optional) (NEXT UP)
+### ✅ Phase F — Cloud v0 Platform (COMPLETED)
+
+* Cloudflare R2 bucket for storing and serving build artifacts
+* Presign API for secure upload URLs with JWT authentication
+* CLI tool for building and uploading projects
+* Edge Router for serving content from `<branch>--<repo>.gridlabs.app`
+* Automated tests for the Cloud platform
+
+### 🔄 Phase G — VS Code extension (optional) (NEXT UP)
 
 * “Open Grid Lab” command starts `vite dev` (if needed) and opens `/__grid`  
 * Publish to VS Code Marketplace
 
-### Phase G — UX polish & docs
+### Phase H — UX polish & docs
 
 * Responsive tweaks & dark-mode pass  
 * Logo / branding in navbar  
 * One-page README with GIF demo & installation snippet
 
-### Phase H — Public beta launch
+### Phase I — Public beta launch
 
 * Invite 5–10 design-partner teams  
 * Post on r/reactjs & Dev.to  
@@ -132,3 +141,46 @@ To enable the Phase E workflow integrations:
 4. **Local Testing**: Create a `.env.local` file with these variables for local development (this file is gitignored)
 
 Happy grid-hacking! 🚀
+
+---
+
+## Cloud v0 - Preview Links
+
+GridLabs Cloud v0 allows you to share preview links of your UI components with anyone, without requiring them to set up or install anything.
+
+### Usage
+
+```bash
+# Install the CLI globally (optional)
+npm install -g gridlabs
+
+# Or use npx directly
+npx gridlabs upload \
+      --org acme \
+      --repo ui \
+      --branch feature/header \
+      --sha $(git rev-parse HEAD)
+```
+
+### How it works
+
+1. The CLI builds your project (if needed) using `vite build`
+2. It zips the `/dist` directory and uploads it to our secure Cloudflare R2 storage
+3. You get a shareable link like `https://feature--ui.gridlabs.app/1b2c3d4/` that anyone can open
+
+### Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `GRIDLABS_API_TOKEN` | Authentication token for the GridLabs API | Yes |
+| `GRIDLABS_API_ENDPOINT` | Custom API endpoint (defaults to `https://api.gridlabs.app`) | No |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--org` | Organization name |
+| `--repo` | Repository name |
+| `--branch` | Branch name |
+| `--sha` | Commit SHA |
+| `--watch` | Watch for changes and re-upload on rebuild |
