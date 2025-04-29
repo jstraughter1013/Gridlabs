@@ -1,7 +1,38 @@
 import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import FastifyJwt from '@fastify/jwt';
 import FastifyRateLimit from '@fastify/rate-limit';
+import FastifyCors from '@fastify/cors';
 import { randomUUID } from 'crypto';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import * as fs from 'fs';
+import { generatePresignedUrl, generatePublicUrl } from './r2-client.js';
+
+// Load environment variables from .env.local
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const rootDir = join(__dirname, '../..');
+const envPath = join(rootDir, '.env.local');
+
+if (fs.existsSync(envPath)) {
+  console.log(`Loading environment variables from ${envPath}`);
+  const envContent = fs.readFileSync(envPath, 'utf8');
+  const envLines = envContent.split('\n');
+  
+  for (const line of envLines) {
+    if (line.trim() && !line.startsWith('#')) {
+      const [key, ...valueParts] = line.split('=');
+      if (key && valueParts.length > 0) {
+        const value = valueParts.join('=').trim();
+        if (!process.env[key.trim()]) {
+          process.env[key.trim()] = value.replace(/^"(.*)"$/, '$1');
+        }
+      }
+    }
+  }
+} else {
+  console.warn(`Warning: ${envPath} not found. Using existing environment variables.`);
+}
 
 // Extend FastifyRequest to include JWT verification
 declare module 'fastify' {
@@ -19,6 +50,13 @@ const UPLOAD_URL_TTL_MINUTES = 30;
 // Initialize Fastify server
 const fastify = Fastify({
   logger: true,
+});
+
+// Register CORS plugin
+fastify.register(FastifyCors, {
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 });
 
 // Register JWT plugin for authentication
@@ -90,14 +128,14 @@ fastify.post('/uploads', {
       for (let i = 0; i < keyCount; i++) {
         const key = i === 0 ? `${basePath}/index.html` : `${basePath}/${i}.html`;
         
-        // In a real implementation, this would use R2 SDK to generate presigned URLs
-        // For now, we'll simulate it with a placeholder
-        const uploadUrl = `https://upload.r2.cloudflare.com/${R2_BUCKET_NAME}/${key}?signature=${requestId}&expires=${Date.now() + UPLOAD_URL_TTL_MINUTES * 60 * 1000}`;
+        // Generate a real presigned URL using the R2 client
+        const contentType = i === 0 ? 'text/html' : 'application/octet-stream';
+        const uploadUrl = await generatePresignedUrl(key, contentType, UPLOAD_URL_TTL_MINUTES * 60);
         uploadUrls.push({ key, uploadUrl });
       }
 
       // Public URL that will be used to access the content
-      const publicUrl = `https://${branch}--${repo}.gridlabs.app/${sha}/`;
+      const publicUrl = generatePublicUrl(org, repo, branch, sha);
 
       return {
         requestId,
@@ -120,16 +158,34 @@ fastify.get('/health', async () => {
 // Start the server
 const start = async () => {
   try {
-    await fastify.listen({ port: PORT as number, host: '0.0.0.0' });
-    console.log(`Server listening on port ${PORT}`);
+    console.log('Starting server...');
+    console.log(`Environment variables:`);
+    console.log(`- PORT=${PORT}`);
+    console.log(`- JWT_SECRET=${JWT_SECRET ? 'set' : 'not set'}`);
+    console.log(`- R2_BUCKET_NAME=${R2_BUCKET_NAME}`);
+    console.log(`- R2_ACCOUNT_ID=${process.env.R2_ACCOUNT_ID ? 'set' : 'not set'}`);
+    console.log(`- R2_ACCESS_KEY_ID=${process.env.R2_ACCESS_KEY_ID ? 'set' : 'not set'}`);
+    
+    // Add a health check route before starting the server
+    fastify.get('/', async () => {
+      return { status: 'ok', message: 'GridLabs Cloud v0 API is running' };
+    });
+    
+    // Start the server
+    const address = await fastify.listen({ port: PORT as number, host: '0.0.0.0' });
+    console.log(`Server is now listening on ${address}`);
+    console.log(`Health check available at: http://localhost:${PORT}/health`);
+    console.log(`Upload endpoint available at: http://localhost:${PORT}/uploads`);
   } catch (err) {
+    console.error('Error starting server:', err);
     fastify.log.error(err);
     process.exit(1);
   }
 };
 
 // Start server if this file is run directly
-if (require.main === module) {
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
   start();
 }
 
