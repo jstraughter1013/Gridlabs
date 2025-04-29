@@ -5,7 +5,7 @@
 GridLabs automatically discovers every `.tsx/.jsx` file under `src/`, builds them with your real app configuration, and lays them out in a share-able grid.  
 It’s like Storybook, but without stories, routes, or manual wiring—drop a component in **`src/`**, push to Git, and it appears live in seconds.
 
-**April 2025 Update:** Phase E (Workflow integrations) is now complete! PR comment bot, Slack notifications, relic-file scanner, search/filter bar, and auto-refresh toast are all implemented and working.
+**April 2025 Update:** Phase F (Cloud v0) is now complete! The GridLabs Cloud platform is fully operational with the "Upload-&-Serve" feature, allowing you to share preview links with anyone via the `gridlabs upload` command. See the [CLOUD.md](./CLOUD.md) file for detailed documentation.
 
 ---
 
@@ -14,7 +14,7 @@ It’s like Storybook, but without stories, routes, or manual wiring—drop a co
 | Pain in current workflow | How GridLabs fixes it |
 | ------------------------ | --------------------- |
 | Manually creating stories / routes for every new component | **Auto-discover plug-in** finds files on `vite dev` and in CI builds |
-| Colleagues can’t see WIP UI without pulling code | **Live grid** deployed to Vercel for every commit |
+| Colleagues can't see WIP UI without pulling code | **Live grid** deployed to GridLabs Cloud for every commit |
 | Hard to share exact build during design reviews | **Copy-link** button copies `?sha=<commit>` URL so reviewers see the same version |
 | Visual regressions spotted only after QA | **Automated screenshots + diff & GPT summary** for each commit |
 | Zombie / duplicate files accumulate over time | **Relic-file scanner** flags unused or duplicate files right in the PR comment |
@@ -28,7 +28,7 @@ It’s like Storybook, but without stories, routes, or manual wiring—drop a co
 | **Scaffold** | Vite + React + TypeScript + Chakra UI |
 | **Plug-in** | `vite-plugin-gridlabs` emits `virtual:gridlabs-map` (list of components) |
 | **Grid UI** | `/__grid` route with component cards showing live thumbnails |
-| **CI / Hosting** | Bitbucket → Vercel auto-deploy (Production) |
+| **CI / Hosting** | Bitbucket → GridLabs Cloud auto-deploy (Production) |
 | **Components detected** | `HelloCard.tsx`, `Intro.tsx`, `Landing.tsx` (demo set) |
 | **Snapshot Infrastructure** | Playwright captures screenshots, uploads to Firebase Storage |
 | **Thumbnail Display** | Grid cards show component snapshots as backgrounds |
@@ -41,9 +41,9 @@ It’s like Storybook, but without stories, routes, or manual wiring—drop a co
 | **Relic-file Scanner** | Detects unused modules & duplicate files |
 | **Search/Filter Bar** | Fuzzy search with `/` hotkey filters grid cards |
 | **Auto-refresh Toast** | Notifies users when a newer build is available |
-| **Cloud v0 Platform** | Share preview links via `npx gridlabs upload` command |
+| **Cloud v0 Platform** | ✅ Share preview links via `npx gridlabs upload` command |
 
-Try the live instance 👉 **https://gridlabs.vercel.app/__grid**
+Try the live instance 👉 **https://main--gridlabs.gridlabs.app/__grid**
 
 ---
 
@@ -78,15 +78,16 @@ Try the live instance 👉 **https://gridlabs.vercel.app/__grid**
 * Search/filter bar with `/` hotkey for instant filtering
 * Auto-refresh toast notifies users when newer builds are available
 
-### ✅ Phase F — Cloud v0 Platform (COMPLETED)
+### ✅ Phase F — Cloud v0 (COMPLETED)
 
-* Cloudflare R2 bucket for storing and serving build artifacts
+* Zero-configuration cloud platform (no Vercel/Firebase accounts needed)
 * Presign API for secure upload URLs with JWT authentication
 * CLI tool for building and uploading projects
 * Edge Router for serving content from `<branch>--<repo>.gridlabs.app`
 * Automated tests for the Cloud platform
+* Comprehensive documentation in [CLOUD.md](./CLOUD.md)
 
-### 🔄 Phase G — VS Code extension (optional) (NEXT UP)
+### 🔄 Phase G — VS Code extension (optional) (IN PROGRESS)
 
 * “Open Grid Lab” command starts `vite dev` (if needed) and opens `/__grid`  
 * Publish to VS Code Marketplace
@@ -144,9 +145,11 @@ Happy grid-hacking! 🚀
 
 ---
 
-## Cloud v0 - Preview Links
+## Cloud v0 - Preview Links ✅
 
-GridLabs Cloud v0 allows you to share preview links of your UI components with anyone, without requiring them to set up or install anything.
+GridLabs Cloud v0 allows you to share preview links of your UI components with anyone, without requiring them to set up or install anything. This feature eliminates the need for users to configure their own Vercel and Firebase accounts, delivering on our zero-configuration promise.
+
+**Status: COMPLETED** - The Cloud v0 feature is fully operational and ready for use. See [CLOUD.md](./CLOUD.md) for detailed documentation.
 
 ### Usage
 
@@ -167,6 +170,16 @@ npx gridlabs upload \
 1. The CLI builds your project (if needed) using `vite build`
 2. It zips the `/dist` directory and uploads it to our secure Cloudflare R2 storage
 3. You get a shareable link like `https://feature--ui.gridlabs.app/1b2c3d4/` that anyone can open
+4. The link works immediately and can be shared with designers, stakeholders, or QA
+
+### Infrastructure Components
+
+The Cloud v0 feature consists of several components working together:
+
+1. **CLI Tool**: Handles building, zipping, and uploading your project
+2. **Presign API**: Generates secure, time-limited upload URLs
+3. **Cloudflare R2 Storage**: Stores the uploaded build artifacts
+4. **Edge Router**: Serves content from R2 through the gridlabs.app domain
 
 ### Environment Variables
 
@@ -175,12 +188,23 @@ npx gridlabs upload \
 | `GRIDLABS_API_TOKEN` | Authentication token for the GridLabs API | Yes |
 | `GRIDLABS_API_ENDPOINT` | Custom API endpoint (defaults to `https://api.gridlabs.app`) | No |
 
-### Options
+### CLI Options
 
 | Option | Description |
 |--------|-------------|
 | `--org` | Organization name |
 | `--repo` | Repository name |
 | `--branch` | Branch name |
-| `--sha` | Commit SHA |
+| `--sha` | Commit SHA (default: current git commit) |
 | `--watch` | Watch for changes and re-upload on rebuild |
+
+### Self-hosting
+
+If you want to self-host the GridLabs Cloud infrastructure:
+
+1. **R2 Bucket**: Create a Cloudflare R2 bucket and configure CORS
+2. **Edge Router**: Deploy the Cloudflare Worker from `cloudflare/edge-router.ts`
+3. **Presign API**: Deploy the API server from `api/presign.ts`
+4. **DNS**: Set up a wildcard CNAME record for your domain
+
+Detailed deployment instructions are available in our [CLOUD.md](./CLOUD.md) documentation file.

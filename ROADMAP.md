@@ -16,7 +16,7 @@ This document outlines the complete feature roadmap for GridLabs, tracking what'
 |---------|--------|-------------|----------|
 | ✅ Grid View | **IMPLEMENTED** | Auto-discovers every React/Vue/Svelte component in the repo and renders them in a localhost grid the moment you hit Save | - |
 | ✅ Vite-powered HMR | **IMPLEMENTED** | Millisecond reloads; no extra dev server | - |
-| ❌ Branch Preview URLs | **NOT IMPLEMENTED** | Push to Git → GridLabs Cloud builds the grid and serves it at branch-name.gridlabs.app (Vercel-style) | **HIGH** |
+| ✅ Branch Preview URLs | **IMPLEMENTED** | Push to Git → GridLabs Cloud builds the grid and serves it at branch-name.gridlabs.app (Vercel-style) | - |
 | ❌ Smart-Default Props | **NOT IMPLEMENTED** | AST/TypeScript analysis chooses safe default values so 90% of components render first try | **MEDIUM** |
 | ❌ Context Auto-Mocker | **NOT IMPLEMENTED** | Detects common providers (Theme, Router, Redux, i18n) and wraps components automatically | **HIGH** |
 
@@ -55,9 +55,9 @@ This document outlines the complete feature roadmap for GridLabs, tracking what'
 
 | Feature | Status | Description | Priority |
 |---------|--------|-------------|----------|
-| ✅ Dedicated Cloud Platform | **IMPLEMENTED** | GridLabs-managed deployment platform (no Vercel required) | **CRITICAL** |
+| ✅ Dedicated Cloud Platform | **IMPLEMENTED** | GridLabs-managed deployment platform (no Vercel required) | - |
+| ✅ Branch-specific URLs | **IMPLEMENTED** | Automatic deployments for each branch using the format `<branch>--<repo>.gridlabs.app` | - |
 | ❌ One-Click Git Integration | **NOT IMPLEMENTED** | Connect repository and automatically deploy | **CRITICAL** |
-| ❌ Branch-specific URLs | **NOT IMPLEMENTED** | Automatic deployments for each branch | **HIGH** |
 | ❌ Team Collaboration | **NOT IMPLEMENTED** | User management and access controls | **MEDIUM** |
 | ❌ Usage Analytics | **NOT IMPLEMENTED** | Track component usage and popularity | **LOW** |
 
@@ -99,7 +99,7 @@ The complete GridLabs platform will provide an end-to-end solution for component
 | Rank | Epic | Raw pts (manual hrs) | Net hrs w/ AI (×0.7) | Net weeks* | Blocking |
 |------|------|---------------------|----------------------|------------|----------|
 | 1 | ✅ Cloud v0 – Upload & Serve | 60 pts (120 h) | **84 h** | **3.5 wks** | **COMPLETE** |
-| 2 | GitHub App Auto‑Trigger | 45 pts (90 h) | **63 h** | **2.5 wks** | Cloud API |
+| 2 | 🔄 GitHub App Auto‑Trigger | 45 pts (90 h) | **63 h** | **2.5 wks** | **IN PROGRESS** |
 | 3 | Context Auto‑Mocker | 30 pts (60 h) | **42 h** | **1.7 wks** | parallel |
 | 4 | Smart‑Default Props | 28 pts (56 h) | **39 h** | **1.6 wks** | none |
 | 5 | Usage Analytics MVP | 30 pts (60 h) | **42 h** | **1.7 wks** | Cloud URLs |
@@ -110,7 +110,7 @@ The complete GridLabs platform will provide an end-to-end solution for component
 
 | Phase | Calendar span | Milestone |
 |-------|---------------|-----------|
-| Sprint 1–4 | **Apr 28 '25** | ✅ Cloud v0 live; CLI upload & share links |
+| Sprint 1–4 | **Apr 29 '25** | ✅ Cloud v0 live; CLI upload & share links |
 | Sprint 5–6 | **Jun 2 – Jun 13 ’25** | GitHub App private beta (auto PR links) |
 | Sprint 7 | **Jun 16 – Jun 27 ’25** | Context Auto‑Mocker GA |
 | Sprint 8 | **Jun 30 – Jul 11 ’25** | Smart‑Default Props beta |

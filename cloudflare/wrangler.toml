@@ -1,0 +1,30 @@
+name = "edge-router"
+main = "edge-router.ts"
+compatibility_date = "2025-04-28"
+
+# Configure R2 bucket binding
+[[r2_buckets]]
+binding = "ARTIFACTS"
+bucket_name = "gl-artifacts-prod"
+
+# Route configuration for production
+[env.production]
+routes = [
+  "*.gridlabs.app/*"
+]
+
+# Enable debug logging
+[vars]
+DEBUG = "true"
+
+# Configure CORS to allow requests from any origin
+[env.production.vars]
+DEBUG = "true"
+
+# Configure R2 bucket binding for production
+[[env.production.r2_buckets]]
+binding = "ARTIFACTS"
+bucket_name = "gl-artifacts-prod"
+
+# Resource limits are not supported on the Free plan
+# Removed CPU limits to allow deployment

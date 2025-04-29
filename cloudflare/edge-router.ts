@@ -10,6 +10,7 @@
 const R2_BUCKET_NAME = 'gl-artifacts-prod';
 const DEFAULT_CACHE_CONTROL = 'max-age=31536000, immutable'; // 1 year for immutable content
 const BRANCH_CACHE_CONTROL = 's-maxage=60'; // 1 minute for branch-only routes
+const DEBUG = true; // Enable detailed logging
 
 interface Env {
   ARTIFACTS: R2Bucket;
@@ -21,21 +22,48 @@ export default {
       const url = new URL(request.url);
       const hostname = url.hostname;
       
+      // Enhanced logging for debugging
+      if (DEBUG) {
+        console.log(`[EdgeRouter] Request received for ${url.toString()}`);
+        console.log(`[EdgeRouter] Hostname: ${hostname}`);
+        console.log(`[EdgeRouter] Path: ${url.pathname}`);
+        console.log(`[EdgeRouter] Headers:`, Object.fromEntries([...request.headers.entries()]));
+      }
+      
       // Parse the hostname to extract branch and repo
       // Format: <branch>--<repo>.gridlabs.app
       const hostnameParts = hostname.split('.');
+      if (DEBUG) {
+        console.log(`[EdgeRouter] Hostname parts:`, hostnameParts);
+      }
+      
       if (hostnameParts.length < 3 || !hostnameParts[0].includes('--')) {
+        console.error(`[EdgeRouter] Invalid hostname format: ${hostname}`);
         return new Response('Invalid URL format. Expected: <branch>--<repo>.gridlabs.app', {
-          status: 400
+          status: 400,
+          headers: {
+            'Content-Type': 'text/plain',
+            'X-GridLabs-Error': 'invalid-hostname-format'
+          }
         });
       }
       
       const [branchRepo] = hostnameParts;
       const [branch, repo] = branchRepo.split('--');
       
+      if (DEBUG) {
+        console.log(`[EdgeRouter] Parsed branch: ${branch}`);
+        console.log(`[EdgeRouter] Parsed repo: ${repo}`);
+      }
+      
       if (!branch || !repo) {
+        console.error(`[EdgeRouter] Missing branch or repo in hostname: ${hostname}`);
         return new Response('Invalid URL format. Expected: <branch>--<repo>.gridlabs.app', {
-          status: 400
+          status: 400,
+          headers: {
+            'Content-Type': 'text/plain',
+            'X-GridLabs-Error': 'missing-branch-or-repo'
+          }
         });
       }
       
@@ -45,6 +73,12 @@ export default {
       const sha = pathParts[0];
       const filePath = pathParts.slice(1).join('/') || 'index.html';
       
+      if (DEBUG) {
+        console.log(`[EdgeRouter] Path parts:`, pathParts);
+        console.log(`[EdgeRouter] SHA: ${sha}`);
+        console.log(`[EdgeRouter] File path: ${filePath}`);
+      }
+      
       // Construct the object key
       // Format: /<org>/<repo>/<branch>/<sha>/[path/to/file]
       // Note: We don't have the org in the URL, so we need to derive it from repo or use a default
@@ -52,14 +86,80 @@ export default {
       const org = repo;
       const objectKey = `${org}/${repo}/${branch}/${sha}/${filePath}`;
       
+      if (DEBUG) {
+        console.log(`[EdgeRouter] Using organization: ${org}`);
+        console.log(`[EdgeRouter] Constructed object key: ${objectKey}`);
+        console.log(`[EdgeRouter] Bucket name: ${R2_BUCKET_NAME}`);
+      }
+      
       // Fetch the object from R2
-      const object = await env.ARTIFACTS.get(objectKey);
+      if (DEBUG) {
+        console.log(`[EdgeRouter] Attempting to fetch object from R2: ${objectKey}`);
+      }
+      
+      // Check if the ARTIFACTS binding exists
+      if (!env.ARTIFACTS) {
+        console.error('[EdgeRouter] R2 bucket binding is missing. Check Worker configuration.');
+        return new Response('Server configuration error: R2 bucket binding is missing', {
+          status: 500,
+          headers: {
+            'Content-Type': 'text/plain',
+            'X-GridLabs-Error': 'missing-r2-binding'
+          }
+        });
+      }
+      
+      let object;
+      try {
+        object = await env.ARTIFACTS.get(objectKey);
+        if (DEBUG) {
+          console.log(`[EdgeRouter] R2 get result: ${object ? 'Object found' : 'Object not found'}`);
+          if (object) {
+            console.log(`[EdgeRouter] Object size: ${object.size} bytes`);
+            console.log(`[EdgeRouter] Object type: ${object.httpMetadata?.contentType || 'unknown'}`);
+          }
+        }
+      } catch (r2Error) {
+        console.error(`[EdgeRouter] R2 error fetching object:`, r2Error);
+        return new Response(`Error accessing storage: ${r2Error.message}`, {
+          status: 500,
+          headers: {
+            'Content-Type': 'text/plain',
+            'X-GridLabs-Error': 'r2-access-error',
+            'X-GridLabs-Error-Details': r2Error.message
+          }
+        });
+      }
       
       if (!object) {
+        if (DEBUG) {
+          console.log(`[EdgeRouter] Object not found: ${objectKey}`);
+        }
+        
         // If the specific file is not found, try index.html
         if (filePath !== 'index.html') {
           const indexKey = `${org}/${repo}/${branch}/${sha}/index.html`;
-          const indexObject = await env.ARTIFACTS.get(indexKey);
+          if (DEBUG) {
+            console.log(`[EdgeRouter] Trying index fallback: ${indexKey}`);
+          }
+          
+          let indexObject;
+          try {
+            indexObject = await env.ARTIFACTS.get(indexKey);
+            if (DEBUG) {
+              console.log(`[EdgeRouter] Index fallback result: ${indexObject ? 'Found' : 'Not found'}`);
+            }
+          } catch (r2Error) {
+            console.error(`[EdgeRouter] R2 error fetching index fallback:`, r2Error);
+            return new Response(`Error accessing storage: ${r2Error.message}`, {
+              status: 500,
+              headers: {
+                'Content-Type': 'text/plain',
+                'X-GridLabs-Error': 'r2-access-error-index-fallback',
+                'X-GridLabs-Error-Details': r2Error.message
+              }
+            });
+          }
           
           if (indexObject) {
             // Determine content type based on the file extension
@@ -97,8 +197,28 @@ export default {
         }
       });
     } catch (error) {
-      console.error('Error in edge router:', error);
-      return new Response('Internal Server Error', { status: 500 });
+      console.error('[EdgeRouter] Unhandled error:', error);
+      
+      // Detailed error response with debugging information
+      const errorDetails = {
+        message: error.message || 'Unknown error',
+        stack: error.stack || 'No stack trace available',
+        name: error.name || 'Error',
+        code: error.code || 'UNKNOWN_ERROR'
+      };
+      
+      if (DEBUG) {
+        console.error('[EdgeRouter] Error details:', JSON.stringify(errorDetails));
+      }
+      
+      return new Response('Internal Server Error', { 
+        status: 500,
+        headers: {
+          'Content-Type': 'text/plain',
+          'X-GridLabs-Error': 'internal-server-error',
+          'X-GridLabs-Error-Details': error.message || 'Unknown error'
+        }
+      });
     }
   }
 };
