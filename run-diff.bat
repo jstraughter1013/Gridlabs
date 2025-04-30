@@ -1,3 +1,4 @@
 @echo off
-set OPENAI_API_KEY=sk-svcacct-jpFnDcn07mGOWr-J5ikzT0WPdOY0znafKRc-I-2dtfd_CyLyubonT6PGt6qeVfa0WT3BlbkFJR7TGE6Uby9_CPCN8ZEGoDa5z7JGMxag0VE2lR1613Rmgqa7PZR2iRz0NgNKpLv13QA
+REM To use this script, set OPENAI_API_KEY as an environment variable first
+REM Example: set OPENAI_API_KEY=your-api-key-here
 node scripts/local-diff.js
