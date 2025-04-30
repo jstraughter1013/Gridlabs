@@ -7,6 +7,7 @@ interface PaginationProps {
   showPageNumbers?: boolean;
   size?: 'small' | 'medium' | 'large';
   variant?: 'simple' | 'detailed';
+  ariaLabel?: string; // New accessibility prop for testing webhook
 }
 
 /**
@@ -19,6 +20,7 @@ const Pagination: React.FC<PaginationProps> = ({
   showPageNumbers = true,
   size = 'medium',
   variant = 'detailed',
+  ariaLabel = 'Pagination navigation',
 }) => {
   // Size classes
   const sizeClasses = {
@@ -62,7 +64,9 @@ const Pagination: React.FC<PaginationProps> = ({
 
   // Render the pagination component
   return (
-    <nav className="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0" data-testid="gridlabs-pagination">
+    <nav className="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0" 
+         data-testid="gridlabs-pagination"
+         aria-label={ariaLabel}>
       <div className="flex flex-1 justify-between sm:hidden">
         <button
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
