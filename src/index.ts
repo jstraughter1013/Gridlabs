@@ -5,6 +5,7 @@ import Avatar from './components/Avatar';
 import Toast from './components/Toast';
 import Tooltip from './components/Tooltip';
 import Tag from './components/Tag';
+import Pagination from './components/Pagination';
 
 export {
   Button,
@@ -13,5 +14,6 @@ export {
   Avatar,
   Toast,
   Tooltip,
-  Tag
+  Tag,
+  Pagination
 };
