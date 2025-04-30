@@ -7,6 +7,7 @@ interface TagProps {
   rounded?: boolean;
   removable?: boolean;
   onRemove?: () => void;
+  icon?: React.ReactNode; // New prop to test webhook functionality
 }
 
 const Tag: React.FC<TagProps> = ({
@@ -16,6 +17,7 @@ const Tag: React.FC<TagProps> = ({
   rounded = true,
   removable = false,
   onRemove,
+  icon,
 }) => {
   // Color variants
   const colorClasses = {
@@ -44,6 +46,7 @@ const Tag: React.FC<TagProps> = ({
       className={`inline-flex items-center font-medium ${colorClasses[color]} ${sizeClasses[size]} ${roundedClass}`}
       data-testid="gridlabs-tag"
     >
+      {icon && <span className="mr-1.5">{icon}</span>}
       {text}
       
       {removable && (
