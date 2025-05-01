@@ -37,7 +37,7 @@ jobs:
       - name: List latest R2 objects for diagnostics
         run: |
           echo "=== List latest objects ==="
-          npx wrangler r2 object list --bucket ${{ secrets.R2_BUCKET }} --limit 5
+          npx wrangler r2 object list ${{ secrets.R2_BUCKET }} --limit 5
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       
