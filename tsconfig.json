@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es2019",
+    "module": "commonjs",
+    "strict": true,
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist",
+    "declaration": false,
+    "noEmit": true,
+    "types": ["node"],
+    "lib": ["dom", "es2020"]
+  },
+  "include": ["src/**/*"]
+}

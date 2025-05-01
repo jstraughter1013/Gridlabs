@@ -1,0 +1,54 @@
+name: PR Preview (Static Only)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
+
+jobs:
+  post-static-comment:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Post static PR comment
+        run: |
+          echo "Posting static PR comment with fallback URL..."
+          
+          # Extract PR details
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          REPO_OWNER=${{ github.repository_owner }}
+          REPO_NAME=${{ github.event.repository.name }}
+          COMMIT_SHA=${{ github.event.pull_request.head.sha }}
+          SHORT_SHA=${COMMIT_SHA:0:7}
+          
+          # Create comment body with static URL
+          COMMENT_BODY="## 🔍 PR Preview\n\n"
+          COMMENT_BODY+="R2 uploads are currently disabled due to SSL issues.\n\n"
+          COMMENT_BODY+="### 🔗 Preview Links\n\n"
+          COMMENT_BODY+="- [**Static Preview**](https://preview-gridlabs.app/test/r2-upload-test-1746095355251/index.html)\n\n"
+          COMMENT_BODY+="*Preview builds are temporarily simplified until SSL issues are resolved.*"
+          
+          # Post comment to PR
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/issues/$PR_NUMBER/comments \
+            -d "{\"body\":\"$COMMENT_BODY\"}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
