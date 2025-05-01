@@ -1,6 +1,7 @@
 // scripts/upload-preview.js
 import fs from "node:fs";
-import { putPreview } from "../dist/api/r2-client.js";
+import r2Client from "../dist/api/r2-client.js";   // CJS appears as default
+const { putPreview } = r2Client;
 
 // Use async function wrapper since top-level await requires ES modules
 async function main() {
