@@ -76,7 +76,25 @@ EOL
 # First try a simple PUT of just the preview.html file
 echo "Attempting simple file upload with AWS CLI..."
 
-# AWS credentials are already configured by the GitHub Action
+# Configure AWS credentials manually
+echo "Configuring AWS credentials..."
+mkdir -p ~/.aws
+
+# Create AWS config file
+cat > ~/.aws/config << EOL
+[default]
+region = us-east-1
+output = json
+EOL
+
+# Create AWS credentials file
+cat > ~/.aws/credentials << EOL
+[default]
+aws_access_key_id = ${ACCESS_KEY}
+aws_secret_access_key = ${SECRET_KEY}
+EOL
+
+chmod 600 ~/.aws/credentials
 
 # Try simple PUT command directly
 echo "Using PUT command for single file..."

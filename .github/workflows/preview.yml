@@ -46,12 +46,8 @@ jobs:
       - name: Install AWS SDK dependencies
         run: npm install --no-save @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
         
-      - name: Setup AWS CLI
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          aws-region: auto
+      # Skip the AWS credentials action as it doesn't work with Cloudflare R2
+      # We'll configure the credentials directly in the script instead
           
       - name: Install AWS CLI
         run: |
