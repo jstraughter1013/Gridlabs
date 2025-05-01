@@ -1,3 +1,5 @@
+// smoke-test preview – 2025-04-30T23:50Z
+
 import React from 'react';
 
 interface AvatarProps {
