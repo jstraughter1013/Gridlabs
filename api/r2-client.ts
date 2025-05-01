@@ -16,17 +16,48 @@ import tls from 'node:tls';
 tls.DEFAULT_MIN_VERSION = 'TLSv1.2';
 tls.DEFAULT_MAX_VERSION = 'TLSv1.3';
 
-// R2 Configuration
-const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID || '';
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || '';
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || '';
-const R2_BUCKET_NAME = process.env.R2_BUCKET || 'gl-artifacts-prod';
-const PUBLIC_URL_BASE = process.env.PUBLIC_URL_BASE || 'https://preview-gridlabs.app';
+// R2 Configuration with default values - use exact names from GitHub secrets
+let CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID || '';
+let R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || '';
+let R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || '';
+let R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || '';
+let R2_BUCKET = process.env.R2_BUCKET || 'gl-artifacts-prod';
+let R2_REGION = 'auto';
+let R2_ENDPOINT = `https://${CF_ACCOUNT_ID || R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+let PUBLIC_URL_BASE = process.env.PUBLIC_URL_BASE || 'https://preview-gridlabs.app';
+
+/**
+ * Set R2 credentials explicitly - useful for ensuring consistency
+ * across different upload methods
+ */
+export function setR2Credentials(config: {
+  endpoint?: string;
+  region?: string;
+  bucket?: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
+}) {
+  if (config.endpoint) {
+    R2_ENDPOINT = config.endpoint;
+    // Extract account ID from endpoint if provided
+    const match = R2_ENDPOINT.match(/https:\/\/([^.]+).r2.cloudflarestorage.com/);
+    if (match && match[1]) {
+      CF_ACCOUNT_ID = match[1];
+    }
+  }
+  
+  if (config.region) R2_REGION = config.region;
+  if (config.bucket) R2_BUCKET = config.bucket;
+  if (config.accessKeyId) R2_ACCESS_KEY_ID = config.accessKeyId;
+  if (config.secretAccessKey) R2_SECRET_ACCESS_KEY = config.secretAccessKey;
+  
+  console.log(`R2 credentials updated: endpoint=${R2_ENDPOINT}, bucket=${R2_BUCKET}`);
+}
 
 // Create an S3 client configured for Cloudflare R2
 // First, let's log what we're working with
 console.log('CF_ACCOUNT_ID value:', CF_ACCOUNT_ID);
-console.log('R2_BUCKET value:', R2_BUCKET_NAME);
+console.log('R2_BUCKET value:', R2_BUCKET);
 
 // Check if CF_ACCOUNT_ID is empty/falsy
 if (!CF_ACCOUNT_ID || CF_ACCOUNT_ID.trim() === '') {
@@ -87,7 +118,7 @@ export const r2 = new S3Client({
  */
 export async function generatePresignedUrl(key: string, contentType: string, expirationSeconds: number = 1800): Promise<string> {
   const command = new PutObjectCommand({
-    Bucket: R2_BUCKET_NAME,
+    Bucket: R2_BUCKET,
     Key: key,
     ContentType: contentType,
   });
@@ -113,20 +144,20 @@ export async function generatePresignedUrl(key: string, contentType: string, exp
  */
 export async function putPreview(key: string, body: Buffer): Promise<any> {
   try {
-    console.log(`Uploading ${key} to R2 bucket ${R2_BUCKET_NAME}...`);
+    console.log(`Uploading ${key} to R2 bucket ${R2_BUCKET}...`);
     console.log(`Upload size: ${body.length} bytes`);
     
     // Log connection details
     console.log('Connection details:', {
       endpoint: endpoint,
       region: 'auto',
-      bucket: R2_BUCKET_NAME,
+      bucket: R2_BUCKET,
       hasCredentials: !!R2_ACCESS_KEY_ID && !!R2_SECRET_ACCESS_KEY,
     });
     
     // Create PutObjectCommand with ContentLength to prevent 500 errors
     const putCommand = new PutObjectCommand({
-      Bucket: R2_BUCKET_NAME,
+      Bucket: R2_BUCKET,
       Key: key,
       Body: body,
       ContentType: 'text/html',

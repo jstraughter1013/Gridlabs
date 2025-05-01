@@ -158,6 +158,15 @@ async function main() {
     // Always try the direct uploader first if it's available,
     // regardless of R2_USE_DIRECT flag to solve SSL issues in CI
     try {
+      // Print debug info for authentication issues
+      console.log('Environment variables for authentication debugging:');
+      console.log(`CF_ACCOUNT_ID: ${process.env.CF_ACCOUNT_ID ? '***' : 'undefined'}`);
+      console.log(`R2_ACCOUNT_ID: ${process.env.R2_ACCOUNT_ID ? '***' : 'undefined'}`);
+      console.log(`R2_BUCKET: ${process.env.R2_BUCKET ? '***' : 'undefined'}`);
+      console.log(`R2_BUCKET_NAME: ${process.env.R2_BUCKET_NAME ? '***' : 'undefined'}`);
+      console.log(`R2_ACCESS_KEY_ID: ${process.env.R2_ACCESS_KEY_ID ? '***' : 'undefined'}`);
+      console.log(`R2_SECRET_ACCESS_KEY: ${process.env.R2_SECRET_ACCESS_KEY ? '***' : 'undefined'}`);
+      
       console.log('Attempting direct R2 upload method first');
       const { uploadToR2 } = await import('./r2-upload.js');
       
@@ -165,11 +174,19 @@ async function main() {
       // This ensures we don't conflict with the normal path but maintain structure
       const testKey = `${org}/${repo}/test-upload/${sha}/index.html`;
       
+      // Use exact variable names matching GitHub secrets
+      const bucketName = process.env.R2_BUCKET || 'gl-artifacts-prod';
+      // Prefer CF_ACCOUNT_ID for compatibility with previous code, but fall back to R2_ACCOUNT_ID
+      const accountId = process.env.CF_ACCOUNT_ID || process.env.R2_ACCOUNT_ID;
+      
+      console.log(`Using bucket name: ${bucketName}`);
+      console.log(`Using account ID: ${accountId ? '***' : 'undefined'}`);
+      
       const result = await uploadToR2({
-        accountId: process.env.CF_ACCOUNT_ID || process.env.R2_ACCOUNT_ID,
+        accountId,
         accessKeyId: process.env.R2_ACCESS_KEY_ID,
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
-        bucket: process.env.R2_BUCKET || process.env.R2_BUCKET_NAME || 'gl-artifacts-prod',
+        bucket: bucketName,
         key: testKey, // Use test key first to verify connectivity
         body: Buffer.from('Test file'),
         contentType: 'text/plain'
@@ -178,12 +195,12 @@ async function main() {
       if (result && result.success) {
         console.log("Test upload successful, proceeding with main upload");
         
-        // Now upload the actual content to the correct path
+        // Now upload the actual content to the correct path using the same account and bucket variables
         const mainResult = await uploadToR2({
-          accountId: process.env.CF_ACCOUNT_ID || process.env.R2_ACCOUNT_ID,
+          accountId, // Use the same accountId variable
           accessKeyId: process.env.R2_ACCESS_KEY_ID,
           secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
-          bucket: process.env.R2_BUCKET || process.env.R2_BUCKET_NAME || 'gl-artifacts-prod',
+          bucket: bucketName, // Use the same bucketName variable
           key,
           body: Buffer.from(html),
           contentType: 'text/html'
@@ -208,7 +225,20 @@ async function main() {
       console.log('Using AWS SDK R2 upload method');
       // Dynamically import the module
       const r2Client = await import("../dist/api/r2-client.js");
-      const { putPreview } = r2Client;
+      const { putPreview, setR2Credentials } = r2Client;
+      
+      // Explicitly set the R2 credentials before uploading
+      console.log(`Setting explicit R2 credentials with accountId: ${accountId ? '***' : 'undefined'}`);
+      console.log(`Setting explicit R2 credentials with bucket: ${bucketName}`);
+      
+      // Explicitly set credentials to ensure consistency
+      setR2Credentials({
+        endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+        region: 'auto',
+        bucket: bucketName,
+        accessKeyId: process.env.R2_ACCESS_KEY_ID,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY
+      });
       
       const result = await putPreview(key, Buffer.from(html));
       
