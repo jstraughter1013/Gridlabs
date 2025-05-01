@@ -7,14 +7,14 @@
  */
 
 // Load environment variables from .env.local
-import path from 'path';
+import { config } from 'dotenv';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 
-// Use require for dotenv since it's more reliable in mixed module environments
-const dotenv = require('dotenv');
-
-// Get directory name using __dirname directly since this isn't an ES module
-const envPath = path.resolve(__dirname, '../.env.local');
-dotenv.config({ path: envPath });
+// Get directory name for ES modules
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const envPath = resolve(__dirname, '../.env.local');
+config({ path: envPath });
 console.log(`Loaded environment from: ${envPath}`);
 
 // Import S3 SDK for presigned URL generation
