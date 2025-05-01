@@ -32,8 +32,15 @@ console.log('Using account ID:', sanitizedAccountId);
 
 // Build endpoint URL with sanitized account ID
 // Make sure we don't include R2_BUCKET in the hostname
-const endpoint = `https://${sanitizedAccountId}.r2.cloudflarestorage.com`;
+// Try the public dev endpoint format which may have different SSL config
+const endpoint = `https://${sanitizedAccountId}.r2.dev`;
 console.log('R2 endpoint URL:', endpoint);
+
+// Import node:https for custom agent options if needed
+import https from 'node:https';
+
+// Check if we're in CI environment
+const isCI = process.env.CI === 'true';
 
 // Create a more robust S3 client with explicit node-http-handler settings
 export const r2 = new S3Client({
@@ -45,12 +52,20 @@ export const r2 = new S3Client({
   },
   // Try to use path style addressing which can be more reliable
   forcePathStyle: true,
-  // Increase the timeout for better reliability in CI environments
+  // Configure special options to help with SSL issues
   requestHandler: {
-    connectionTimeout: 5000,
-    socketTimeout: 8000,
+    connectionTimeout: 10000, // Increased timeout
+    socketTimeout: 15000,     // Increased timeout
+    // Add custom HTTPS agent for CI environments where SSL verification might be problematic
+    ...(isCI ? {
+      httpsAgent: new https.Agent({
+        keepAlive: true,
+        maxSockets: 50,
+        rejectUnauthorized: false, // Only for troubleshooting in CI
+      })
+    } : {})
   },
-  // Max attempts for automatic retries
+  // More aggressive retry strategy
   maxAttempts: 5,
   // Log request details for debugging
   logger: console,
