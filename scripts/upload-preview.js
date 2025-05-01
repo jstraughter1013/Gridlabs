@@ -1,15 +1,17 @@
 // scripts/upload-preview.js
 import fs from "node:fs";
-import r2Client from "../dist/api/r2-client.js";   // CJS appears as default
-const { putPreview } = r2Client;
 
-// Use async function wrapper since top-level await requires ES modules
+// Use async function with dynamic import
 async function main() {
-  const commit = process.env.GITHUB_SHA ?? "local";
-  const html = `<html><body><h1>CI smoke ${commit}</h1></body></html>`;
-  const key = `${commit}.html`;
-
   try {
+    // Dynamically import the module
+    const r2Client = await import("../dist/api/r2-client.js");
+    const { putPreview } = r2Client;
+    
+    const commit = process.env.GITHUB_SHA ?? "local";
+    const html = `<html><body><h1>CI smoke ${commit}</h1></body></html>`;
+    const key = `${commit}.html`;
+
     await putPreview(key, Buffer.from(html));
     console.log("Uploaded preview:", key);
   } catch (error) {
