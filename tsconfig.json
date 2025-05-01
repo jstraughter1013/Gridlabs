@@ -9,8 +9,9 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "dist",
     "declaration": false,
+    "noEmit": true,
     "types": ["node"],
     "lib": ["dom", "es2020"]
   },
-  "include": ["src/**/*", "api/**/*"]
+  "include": ["src/**/*"]
 }

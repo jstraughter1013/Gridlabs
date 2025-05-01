@@ -41,8 +41,8 @@ jobs:
       #   env:
       #     CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       
-      - name: Transpile helpers to JS
-        run: npx tsc --project tsconfig.json --outDir dist --noEmit false
+      - name: Transpile helper to JS
+        run: npx tsc api/r2-client.ts --outDir dist/api --module commonjs --target ES2019 --esModuleInterop
 
       - name: Upload preview to R2
         id: upload
