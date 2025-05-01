@@ -4,6 +4,11 @@ import fs from "node:fs";
 // Use async function with dynamic import
 async function main() {
   try {
+    // Debug output for environment variables
+    console.log('Environment variables for debugging:');
+    console.log('CF_ACCOUNT_ID:', process.env.CF_ACCOUNT_ID);
+    console.log('R2_BUCKET:', process.env.R2_BUCKET);
+    
     // Dynamically import the module
     const r2Client = await import("../dist/api/r2-client.js");
     const { putPreview } = r2Client;
