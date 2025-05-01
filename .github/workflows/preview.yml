@@ -46,6 +46,15 @@ jobs:
       - name: Install AWS SDK dependencies
         run: npm install --no-save @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
         
+      - name: Install AWS CLI
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+          version: 2
+          verbose: false
+          
+      - name: Set AWS CLI permissions for R2 upload script
+        run: chmod +x scripts/r2-cli-upload.sh
+        
       - name: Transpile helper to JS
         run: npx tsc api/r2-client.ts --outDir dist/api --module NodeNext --target ES2019 --esModuleInterop --moduleResolution nodenext
 
@@ -54,9 +63,23 @@ jobs:
           echo "Testing TLS handshake..."
           curl -I https://${{ secrets.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com/${{ secrets.R2_BUCKET }}/ || true
 
-      - name: Upload preview to R2
-        id: upload
+      - name: Upload preview to R2 (CLI approach)
+        id: upload-cli
+        continue-on-error: true
         run: |
+          echo "Attempting R2 upload using AWS CLI (most reliable approach)..."
+          ./scripts/r2-cli-upload.sh ./dist ${{ github.repository_owner }} ${{ github.event.repository.name }} ${{ github.event.pull_request.head.sha }}
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          
+      - name: Upload preview to R2 (fallback to Node.js)
+        id: upload
+        if: ${{ steps.upload-cli.outcome == 'failure' }}
+        run: |
+          echo "AWS CLI approach failed, falling back to Node.js upload..."
           node scripts/upload-preview.js
         env:
           # Ensure CF_ACCOUNT_ID doesn't have a trailing period
@@ -64,6 +87,8 @@ jobs:
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          # Try both approaches for maximum redundancy
+          R2_USE_DIRECT: true
           R2_USE_SDK: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
