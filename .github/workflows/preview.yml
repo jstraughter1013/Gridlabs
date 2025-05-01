@@ -1,0 +1,69 @@
+name: PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
+
+jobs:
+  build-preview:
+    runs-on: ubuntu-22.04
+    env:
+      # Ensure consistent credentials across all steps
+      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_USE_DIRECT: true
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Build
+        run: npm run build
+        env:
+          NODE_OPTIONS: "--experimental-vm-modules"
+      
+      - name: Install AWS SDK dependencies
+        run: npm install --no-save @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+        
+      - name: Transpile helper to JS
+        run: npx tsc api/r2-client.ts --outDir dist/api --module NodeNext --target ES2019 --esModuleInterop --moduleResolution nodenext
+
+      - name: Curl R2 endpoint test
+        run: |
+          echo "Testing TLS handshake..."
+          curl -v https://${{ secrets.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com/ || true
+
+      - name: Upload preview to R2
+        id: upload
+        run: |
+          echo "Uploading preview to Cloudflare R2..."
+          node scripts/upload-preview.js
+        env:
+          R2_USE_DIRECT: true
+      
+      - name: Post PR comment
+        id: comment
+        run: node scripts/post-pr-comment.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
