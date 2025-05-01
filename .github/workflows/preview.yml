@@ -52,6 +52,7 @@ jobs:
         run: |
           node scripts/upload-preview.js
         env:
+          # Ensure CF_ACCOUNT_ID doesn't have a trailing period
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
