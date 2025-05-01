@@ -2,6 +2,7 @@
   "name": "gridlabs-ui-components",
   "version": "0.1.0",
   "description": "UI Components for GridLabs",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
