@@ -1,5 +1,14 @@
 // scripts/upload-preview.js
 import fs from "node:fs";
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+import { config } from 'dotenv';
+
+// Load environment variables from .env.local
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const envPath = resolve(__dirname, '../api/.env.local');
+config({ path: envPath });
+console.log(`Loaded environment from: ${envPath}`);
 
 // Use async function with dynamic import
 async function main() {

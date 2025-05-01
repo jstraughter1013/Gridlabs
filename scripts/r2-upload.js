@@ -3,6 +3,15 @@ import fs from 'node:fs';
 import https from 'node:https';
 import { createHash, createHmac } from 'node:crypto';
 import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+import { config } from 'dotenv';
+
+// Load environment variables from .env.local
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const envPath = resolve(__dirname, '../api/.env.local');
+config({ path: envPath });
+console.log(`Loaded environment from: ${envPath}`);
 
 /**
  * Direct R2 uploader that bypasses AWS SDK

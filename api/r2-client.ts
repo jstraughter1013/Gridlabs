@@ -6,6 +6,17 @@
  * for accessing uploaded content.
  */
 
+// Load environment variables from .env.local
+import { config } from 'dotenv';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+// Get directory name for ES modules
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const envPath = resolve(__dirname, './.env.local');
+config({ path: envPath });
+console.log(`Loaded environment from: ${envPath}`);
+
 // Import S3 SDK for presigned URL generation
 import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
