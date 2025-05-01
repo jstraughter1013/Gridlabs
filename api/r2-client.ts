@@ -17,10 +17,18 @@ const R2_BUCKET_NAME = process.env.R2_BUCKET || 'gl-artifacts-prod';
 const PUBLIC_URL_BASE = process.env.PUBLIC_URL_BASE || 'https://gridlabs-preview.windsurf.io';
 
 // Create an S3 client configured for Cloudflare R2
+// First, let's log what we're working with
+console.log('CF_ACCOUNT_ID before sanitizing:', CF_ACCOUNT_ID);
+const sanitizedAccountId = CF_ACCOUNT_ID.replace(/\.+$/, '');
+console.log('CF_ACCOUNT_ID after sanitizing:', sanitizedAccountId);
+
+// Build endpoint URL with sanitized account ID
+const endpoint = `https://${sanitizedAccountId}.r2.cloudflarestorage.com`;
+console.log('R2 endpoint URL:', endpoint);
+
 export const r2 = new S3Client({
   region: "auto",
-  // Ensure CF_ACCOUNT_ID doesn't have a trailing period
-  endpoint: `https://${CF_ACCOUNT_ID.replace(/\.+$/, '')}.r2.cloudflarestorage.com`,
+  endpoint,
   credentials: {
     accessKeyId: R2_ACCESS_KEY_ID,
     secretAccessKey: R2_SECRET_ACCESS_KEY,
@@ -104,9 +112,8 @@ export async function putPreview(key: string, body: Buffer): Promise<any> {
 export function generatePublicUrl(org: string, repo: string, branch: string, sha: string): string {
   // Bucket is public, so don't sign URLs
   if (process.env.R2_USE_SDK === 'true') {
-    // Ensure CF_ACCOUNT_ID doesn't have a trailing period
-    const accountId = CF_ACCOUNT_ID.replace(/\.+$/, '');
-    return `https://${accountId}.r2.cloudflarestorage.com/${R2_BUCKET_NAME}/${org}/${repo}/${branch}/${sha}/index.html`;
+    // Use the same sanitized account ID variable created earlier
+    return `https://${sanitizedAccountId}.r2.cloudflarestorage.com/${R2_BUCKET_NAME}/${org}/${repo}/${branch}/${sha}/index.html`;
   }
   return `${PUBLIC_URL_BASE}/${org}/${repo}/${branch}/${sha}/index.html`;
 }
