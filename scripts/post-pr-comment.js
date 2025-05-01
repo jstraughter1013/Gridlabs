@@ -48,9 +48,16 @@ async function main() {
     // Use the exact same structure as in upload-preview.js
     const sha = COMMIT_SHA.substring(0, 7);
     
-    // Generate preview URL using the structured path format
-    const previewUrl = `https://preview-gridlabs.app/${owner}/${repo}/smoke/${sha}/index.html`;
-    console.log(`Using structured URL: ${previewUrl}`);
+    // Check if we have a specific URL from the upload script
+    let previewUrl = process.env.R2_UPLOAD_URL;
+    
+    // Fall back to the structured path format if no direct URL was provided
+    if (!previewUrl) {
+      previewUrl = `https://preview-gridlabs.app/${owner}/${repo}/smoke/${sha}/index.html`;
+      console.log(`Using structured URL: ${previewUrl}`);
+    } else {
+      console.log(`Using actual uploaded URL provided by upload script: ${previewUrl}`);
+    }
     
     // Create the comment body
     const commentBody = `## 🚀 Preview Ready!
