@@ -45,7 +45,7 @@ jobs:
         run: npm install --no-save @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
         
       - name: Transpile helper to JS
-        run: npx tsc api/r2-client.ts --outDir dist/api --module ESNext --target ES2019 --esModuleInterop --moduleResolution nodenext
+        run: npx tsc api/r2-client.ts --outDir dist/api --module NodeNext --target ES2019 --esModuleInterop --moduleResolution nodenext
 
       - name: Upload preview to R2
         id: upload
