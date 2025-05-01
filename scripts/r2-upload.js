@@ -26,15 +26,15 @@ export async function uploadToR2(options) {
   console.log(`[R2 Upload] Starting direct upload to R2 for ${key}`);
   console.log(`[R2 Upload] Content length: ${body.length} bytes`);
   
-  // Create a custom HTTPS agent with advanced TLS configuration
+  // Create a simplified HTTPS agent with basic TLS configuration for testing
+  // NOTE: Temporarily removed explicit ciphers and secureProtocol for diagnostic testing
   const httpsAgent = new https.Agent({
     keepAlive: true,
     maxSockets: 25,
     rejectUnauthorized: true, // Enable SSL verification
     minVersion: 'TLSv1.2',    // Only use TLS 1.2 or higher
     maxVersion: 'TLSv1.3',    // Support up to TLS 1.3
-    ciphers: 'HIGH:!aNULL:!MD5:!RC4', // Secure cipher list
-    secureProtocol: 'TLSv1_2_method', // Force TLS 1.2 as minimum
+    // ciphers and secureProtocol removed for testing
   });
 
   try {

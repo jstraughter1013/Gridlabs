@@ -46,6 +46,15 @@ console.log('R2 endpoint URL:', endpoint);
 // Check if we're in CI environment
 const isCI = process.env.CI === 'true';
 
+// Create custom HTTPS agent with standardized TLS settings
+const httpsAgent = new https.Agent({
+  keepAlive: true,
+  maxSockets: 50,
+  rejectUnauthorized: true,  // Always validate certificates
+  minVersion: 'TLSv1.2',     // Minimum TLS version
+  maxVersion: 'TLSv1.3',     // Maximum TLS version
+});
+
 // Create a more robust S3 client with explicit node-http-handler settings
 export const r2 = new S3Client({
   region: "auto",
@@ -60,14 +69,7 @@ export const r2 = new S3Client({
   requestHandler: {
     connectionTimeout: 10000, // Increased timeout
     socketTimeout: 15000,     // Increased timeout
-    // Add custom HTTPS agent for CI environments where SSL verification might be problematic
-    ...(isCI ? {
-      httpsAgent: new https.Agent({
-        keepAlive: true,
-        maxSockets: 50,
-        rejectUnauthorized: false, // Only for troubleshooting in CI
-      })
-    } : {})
+    httpsAgent,
   },
   // More aggressive retry strategy
   maxAttempts: 5,
