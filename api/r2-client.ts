@@ -35,6 +35,7 @@ console.log('Using account ID:', sanitizedAccountId);
 const endpoint = `https://${sanitizedAccountId}.r2.cloudflarestorage.com`;
 console.log('R2 endpoint URL:', endpoint);
 
+// Create client with configuration for troubleshooting
 export const r2 = new S3Client({
   region: "auto",
   endpoint,
@@ -42,6 +43,11 @@ export const r2 = new S3Client({
     accessKeyId: R2_ACCESS_KEY_ID,
     secretAccessKey: R2_SECRET_ACCESS_KEY,
   },
+  // Add options to help with SSL errors
+  tls: false, // Disable TLS verification for troubleshooting
+  forcePathStyle: true, // Use path-style URLs instead of virtual-hosted style
+  // For debugging only - not for production use
+  logger: console,
 });
 
 /**
