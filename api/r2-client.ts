@@ -143,9 +143,9 @@ export async function generatePresignedUrl(key: string, contentType: string, exp
   try {
     const presignedUrl = await getSignedUrl(r2, command, { expiresIn: expirationSeconds });
     return presignedUrl;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error generating presigned URL:', error);
-    throw new Error('Failed to generate presigned URL');
+    throw new Error(`Failed to generate presigned URL: ${error?.message || 'Unknown error'}`);
   }
 }
 
@@ -190,11 +190,11 @@ export async function putPreview(key: string, body: Buffer): Promise<any> {
         etag: result.ETag,
       });
       return result;
-    } catch (uploadError) {
+    } catch (uploadError: any) {
       console.error('Error in PutObjectCommand:', uploadError);
       throw uploadError;
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Failed to upload ${key} to R2:`, error);
     
     // In CI, treat this as a soft failure
