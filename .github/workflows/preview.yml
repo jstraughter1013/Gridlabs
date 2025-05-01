@@ -47,6 +47,11 @@ jobs:
       - name: Transpile helper to JS
         run: npx tsc api/r2-client.ts --outDir dist/api --module NodeNext --target ES2019 --esModuleInterop --moduleResolution nodenext
 
+      - name: Curl R2 endpoint
+        run: |
+          echo "Testing TLS handshake..."
+          curl -I https://${{ secrets.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com/${{ secrets.R2_BUCKET }}/ || true
+
       - name: Upload preview to R2
         id: upload
         run: |
