@@ -1,0 +1,94 @@
+name: PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - master
+
+env:
+  NODE_VERSION: '18.x'
+  # Enable detailed AWS SDK debugging
+  AWS_SDK_LOG_MODE: "debug"
+  AWS_EC2_METADATA_DISABLED: "true"
+  # Use the direct upload method by default (bypasses AWS SDK)
+  R2_USE_DIRECT: 'true'
+  # TLS configuration for Node.js
+  NODE_OPTIONS: "--tls-min-v1.2 --tls-cipher-list='HIGH:!aNULL:!MD5:!RC4'"
+
+jobs:
+  build-and-deploy-preview:
+    name: Deploy PR Preview
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: |
+          npm ci
+          # Install additional TLS/SSL tools for diagnostics
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates openssl curl
+      
+      - name: Build project
+        run: npm run build
+      
+      - name: Run TLS connectivity test
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          echo "Testing TLS connection to R2 endpoint..."
+          curl -v --tlsv1.2 -k https://$CF_ACCOUNT_ID.r2.cloudflarestorage.com > /dev/null || true
+      
+      - name: Deploy preview
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: gl-artifacts-prod
+          # Force direct upload method and prevent AWS SDK override
+          R2_USE_DIRECT: 'true'
+          R2_USE_SDK: 'false'
+          # PR & repo information
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.repository.name }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          # Set Node.js network/TLS-related environment variables
+          export NODE_TLS_REJECT_UNAUTHORIZED=1
+          export NODE_OPTIONS="--tls-min-v1.2 --tls-cipher-list='HIGH:!aNULL:!MD5:!RC4'"
+          
+          # Explicitly ensure R2_USE_DIRECT is set
+          export R2_USE_DIRECT=true
+          export R2_USE_SDK=false
+          
+          # Log the environment variables for debugging
+          echo "Environment variables for upload:" 
+          echo "R2_USE_DIRECT=${R2_USE_DIRECT}"
+          echo "R2_USE_SDK=${R2_USE_SDK}"
+          
+          # Try both upload methods (direct will be tried first because of R2_USE_DIRECT=true)
+          echo "Uploading preview with optimized configuration..."
+          node ./scripts/upload-preview.js
+      
+      - name: Post preview link as PR comment
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          R2_BUCKET: gl-artifacts-prod
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: node ./scripts/post-pr-comment.js
