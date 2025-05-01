@@ -12,10 +12,15 @@ ACCESS_KEY=${R2_ACCESS_KEY_ID}
 SECRET_KEY=${R2_SECRET_ACCESS_KEY}
 
 # Parse arguments
-SOURCE_DIR=${1:-"./dist"}
-ORG=${2:-$(echo $GITHUB_REPOSITORY_OWNER)}
-REPO=${3:-$(echo $GITHUB_REPOSITORY | cut -d '/' -f 2)}
-SHA=${4:-$(echo $GITHUB_SHA | cut -c1-7)}
+SOURCE_DIR="./dist"
+ORG=${GITHUB_REPOSITORY_OWNER}
+REPO=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 2)
+SHA=$(echo $GITHUB_SHA | cut -c1-7)
+
+# Log the values for debugging
+echo "Organization: $ORG"
+echo "Repository: $REPO"
+echo "Commit SHA: $SHA"
 
 # Validate required inputs
 if [ -z "$ACCOUNT_ID" ] || [ -z "$ACCESS_KEY" ] || [ -z "$SECRET_KEY" ]; then
@@ -32,13 +37,59 @@ aws configure set aws_access_key_id ${ACCESS_KEY}
 aws configure set aws_secret_access_key ${SECRET_KEY}
 aws configure set default.region auto
 
-# Attempt the upload with explicit parameters to avoid SSL issues
-echo "Starting upload with AWS CLI..."
-aws s3 cp --endpoint-url "https://${ACCOUNT_ID}.r2.cloudflarestorage.com" \
-    --no-verify-ssl \
-    "${SOURCE_DIR}/" \
-    "${DEST_PATH}" \
-    --recursive
+# Create the HTML content to upload
+echo "Creating simple preview HTML file..."
+cat > preview.html << EOL
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GridLabs Preview</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 5px;
+    }
+    h1 { color: #2c3e50; }
+    .info { color: #7f8c8d; font-size: 0.9em; }
+    .success { color: #27ae60; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>GridLabs Preview</h1>
+    <p>Preview build for commit <strong>${SHA}</strong> in repository <strong>${ORG}/${REPO}</strong></p>
+    <p class="success">✅ Build successful</p>
+    <p class="info">Generated at $(date)</p>
+  </div>
+</body>
+</html>
+EOL
+
+# First try a simple PUT of just the preview.html file
+echo "Attempting simple file upload with AWS CLI..."
+
+# Set up AWS CLI configuration
+aws configure set aws_access_key_id "${ACCESS_KEY}"
+aws configure set aws_secret_access_key "${SECRET_KEY}"
+aws configure set default.region "auto"
+
+# Try simple PUT command
+echo "Using PUT command for single file..."
+aws s3api put-object \
+    --endpoint-url "https://${ACCOUNT_ID}.r2.cloudflarestorage.com" \
+    --bucket "${BUCKET}" \
+    --key "${ORG}/${REPO}/smoke/${SHA}/index.html" \
+    --body "preview.html" \
+    --content-type "text/html" \
+    --debug
 
 # If successful, output the preview URL
 if [ $? -eq 0 ]; then

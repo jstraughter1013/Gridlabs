@@ -47,10 +47,11 @@ jobs:
         run: npm install --no-save @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
         
       - name: Install AWS CLI
-        uses: unfor19/install-aws-cli-action@v1
-        with:
-          version: 2
-          verbose: false
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+          aws --version
           
       - name: Set AWS CLI permissions for R2 upload script
         run: chmod +x scripts/r2-cli-upload.sh
@@ -68,7 +69,8 @@ jobs:
         continue-on-error: true
         run: |
           echo "Attempting R2 upload using AWS CLI (most reliable approach)..."
-          ./scripts/r2-cli-upload.sh ./dist ${{ github.repository_owner }} ${{ github.event.repository.name }} ${{ github.event.pull_request.head.sha }}
+          chmod +x ./scripts/r2-cli-upload.sh
+          ./scripts/r2-cli-upload.sh
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
