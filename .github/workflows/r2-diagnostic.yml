@@ -1,0 +1,102 @@
+name: R2 SSL Diagnostic Tests
+
+on:
+  push:
+    branches: [fix/debug-ssl-handshake]
+  workflow_dispatch:
+
+jobs:
+  diagnostic-tests:
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Install AWS SDK
+        run: npm install --no-save @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+        
+      - name: Transpile helper to JS
+        run: npx tsc api/r2-client.ts --outDir dist/api --module NodeNext --target ES2019 --esModuleInterop --moduleResolution nodenext
+
+      - name: Curl R2 endpoint Basic
+        run: |
+          echo "=== Basic TLS Test ==="
+          curl -v https://${{ secrets.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com/ || true
+
+      - name: Curl R2 endpoint with TLS 1.2
+        run: |
+          echo "=== TLS 1.2 Explicit Test ==="
+          curl -v --tlsv1.2 --tls-max 1.2 https://${{ secrets.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com/ || true
+
+      - name: Curl R2 endpoint with TLS 1.3
+        run: |
+          echo "=== TLS 1.3 Explicit Test ==="
+          curl -v --tlsv1.3 https://${{ secrets.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com/ || true
+      
+      - name: Curl with custom ciphers
+        run: |
+          echo "=== Testing with explicit cipher list ==="
+          curl -v --tlsv1.2 --ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384' https://${{ secrets.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com/ || true
+
+      - name: Show OpenSSL version
+        run: |
+          echo "=== OpenSSL Version Info ==="
+          openssl version -a
+          
+      - name: Test with simple fetch
+        run: |
+          echo "=== Simple fetch test ==="
+          node -e "
+          const https = require('https');
+          const options = {
+            hostname: '${{ secrets.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com',
+            port: 443,
+            path: '/',
+            method: 'GET',
+            rejectUnauthorized: true,
+            minVersion: 'TLSv1.2',
+            maxVersion: 'TLSv1.3',
+          };
+          console.log('Starting HTTPS request...');
+          const req = https.request(options, (res) => {
+            console.log('TLS Connection Successful!');
+            console.log('StatusCode:', res.statusCode);
+            console.log('Headers:', JSON.stringify(res.headers, null, 2));
+            res.on('data', (d) => { /* ignore data */ });
+          });
+          req.on('error', (e) => {
+            console.error('TLS Error:', e);
+          });
+          req.end();
+          " || true
+      
+      - name: Run direct R2 Upload test with TLS debug
+        run: |
+          echo "=== Direct R2 Upload Test with TLS Debugging ==="
+          node scripts/r2-upload.js
+        env:
+          NODE_DEBUG: "tls,https,net"
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          
+      - name: Run SDK R2 Upload test with TLS debug
+        run: |
+          echo "=== SDK R2 Upload Test with TLS Debugging ==="
+          R2_USE_DIRECT=false R2_USE_SDK=true node scripts/upload-preview.js
+        env:
+          NODE_DEBUG: "tls,https,net"
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}

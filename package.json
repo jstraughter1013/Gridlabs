@@ -2,6 +2,7 @@
   "name": "gridlabs-ui-components",
   "version": "0.1.0",
   "description": "UI Components for GridLabs",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -9,14 +10,20 @@
     "test": "jest"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@types/dotenv": "^6.1.1",
+    "dotenv": "^16.5.0",
+    "node-fetch": "^2.7.0",
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
   },
   "devDependencies": {
+    "@octokit/rest": "^21.1.1",
+    "@types/node": "^22.15.3",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "typescript": "^5.0.0",
-    "tailwindcss": "^3.3.0"
+    "tailwindcss": "^3.3.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0"
   },
   "peerDependencies": {
     "react": ">=17.0.0",
