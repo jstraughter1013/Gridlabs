@@ -38,9 +38,10 @@ export async function uploadToR2(options) {
   });
 
   try {
-    // Format the endpoint URL properly
+    // Format the endpoint and host URL properly
     const host = `${accountId}.r2.cloudflarestorage.com`;
-    const endpoint = `https://${host}/${bucket}/${key}`;
+    // Important: DO NOT include bucket in the endpoint URL as it should be in the path
+    const endpoint = `https://${host}/${key}`;
     
     // Current timestamp in ISO format
     const amzDate = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '');
@@ -52,7 +53,8 @@ export async function uploadToR2(options) {
     
     // Step 1: Create canonical request
     const httpMethod = 'PUT';
-    const canonicalUri = `/${bucket}/${key}`;
+    // Cloudflare R2 expects this format for the canonicalUri
+    const canonicalUri = `/${key}`;
     const canonicalQueryString = '';
     const payloadHash = createHash('sha256').update(body).digest('hex');
     
