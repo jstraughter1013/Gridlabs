@@ -8,6 +8,14 @@ async function main() {
     console.log('Environment variables for debugging:');
     console.log('CF_ACCOUNT_ID:', process.env.CF_ACCOUNT_ID);
     console.log('R2_BUCKET:', process.env.R2_BUCKET);
+    console.log('R2_USE_SDK:', process.env.R2_USE_SDK);
+    
+    // Clean any trailing periods from account ID
+    if (process.env.CF_ACCOUNT_ID && process.env.CF_ACCOUNT_ID.endsWith('.')) {
+      console.log('WARNING: Trailing period detected in CF_ACCOUNT_ID, fixing it.');
+      process.env.CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID.replace(/\.+$/, '');
+      console.log('Sanitized CF_ACCOUNT_ID:', process.env.CF_ACCOUNT_ID);
+    }
     
     // Dynamically import the module
     const r2Client = await import("../dist/api/r2-client.js");
