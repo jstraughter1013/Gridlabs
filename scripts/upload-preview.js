@@ -23,7 +23,11 @@ async function main() {
     
     const commit = process.env.GITHUB_SHA ?? "local";
     const html = `<html><body><h1>CI smoke ${commit}</h1></body></html>`;
-    const key = `${commit}.html`;
+    
+    // Use proper path structure to match what the PR comment expects
+    const repo = process.env.GITHUB_REPOSITORY ?? "owner/repo";
+    const branch = process.env.GITHUB_REF_NAME ?? "branch";
+    const key = `${repo}/${branch}/${commit}/index.html`;
 
     await putPreview(key, Buffer.from(html));
     console.log("Uploaded preview:", key);
