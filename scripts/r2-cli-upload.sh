@@ -76,20 +76,17 @@ EOL
 # First try a simple PUT of just the preview.html file
 echo "Attempting simple file upload with AWS CLI..."
 
-# Set up AWS CLI configuration
-aws configure set aws_access_key_id "${ACCESS_KEY}"
-aws configure set aws_secret_access_key "${SECRET_KEY}"
-aws configure set default.region "auto"
+# AWS credentials are already configured by the GitHub Action
 
-# Try simple PUT command
+# Try simple PUT command directly
 echo "Using PUT command for single file..."
 aws s3api put-object \
     --endpoint-url "https://${ACCOUNT_ID}.r2.cloudflarestorage.com" \
+    --no-verify-ssl \
     --bucket "${BUCKET}" \
     --key "${ORG}/${REPO}/smoke/${SHA}/index.html" \
     --body "preview.html" \
-    --content-type "text/html" \
-    --debug
+    --content-type "text/html"
 
 # If successful, output the preview URL
 if [ $? -eq 0 ]; then

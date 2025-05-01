@@ -46,13 +46,18 @@ jobs:
       - name: Install AWS SDK dependencies
         run: npm install --no-save @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
         
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          aws-region: auto
+          
       - name: Install AWS CLI
         run: |
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install
+          sudo apt-get update && sudo apt-get install -y awscli
           aws --version
-          
+      
       - name: Set AWS CLI permissions for R2 upload script
         run: chmod +x scripts/r2-cli-upload.sh
         
