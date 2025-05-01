@@ -93,10 +93,10 @@ async function main() {
     
     // For debugging, log all possible URLs
     console.log('Using these potential preview URLs in order of preference:');
-    console.log('1. Direct URL from upload script:', process.env.R2_UPLOAD_URL || 'Not available');
-    console.log('2. Test upload URL:', process.env.TEST_PREVIEW_URL || 'Not available');
-    console.log('3. Standard URL pattern:', previewUrl);
-    console.log('4. R2 test pattern URL:', testPatternUrl);
+    console.log('1. CLI upload URL:', cliUploadUrl || 'Not available');
+    console.log('2. Node.js direct URL:', directUploadUrl || 'Not available');
+    console.log('3. Fallback URL:', fallbackUrl || 'Not available');
+    console.log('4. Primary URL (selected):', primaryUrl);
     
     // Create the comment body with improved preview links
     const commentBody = `## 🚀 Preview Ready!
