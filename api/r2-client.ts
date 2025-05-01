@@ -18,11 +18,20 @@ const PUBLIC_URL_BASE = process.env.PUBLIC_URL_BASE || 'https://gridlabs-preview
 
 // Create an S3 client configured for Cloudflare R2
 // First, let's log what we're working with
-console.log('CF_ACCOUNT_ID before sanitizing:', CF_ACCOUNT_ID);
-const sanitizedAccountId = CF_ACCOUNT_ID.replace(/\.+$/, '');
-console.log('CF_ACCOUNT_ID after sanitizing:', sanitizedAccountId);
+console.log('CF_ACCOUNT_ID value:', CF_ACCOUNT_ID);
+console.log('R2_BUCKET value:', R2_BUCKET_NAME);
+
+// Check if CF_ACCOUNT_ID is empty/falsy
+if (!CF_ACCOUNT_ID || CF_ACCOUNT_ID.trim() === '') {
+  console.log('WARNING: CF_ACCOUNT_ID is empty! Using a placeholder for now.');
+}
+
+// Apply fallback and sanitize
+const sanitizedAccountId = (CF_ACCOUNT_ID || 'missing-account-id').replace(/\.+$/, '');
+console.log('Using account ID:', sanitizedAccountId);
 
 // Build endpoint URL with sanitized account ID
+// Make sure we don't include R2_BUCKET in the hostname
 const endpoint = `https://${sanitizedAccountId}.r2.cloudflarestorage.com`;
 console.log('R2 endpoint URL:', endpoint);
 
