@@ -155,6 +155,12 @@ async function main() {
     process.env.R2_UPLOAD_URL = `https://preview-gridlabs.app/${org}/${repo}/smoke/${sha}/index.html`;
     console.log(`Default preview URL set to: ${process.env.R2_UPLOAD_URL}`);
     
+    // Define credential variables outside both try blocks so they're accessible in both
+    // Use exact variable names matching GitHub secrets
+    const bucketName = process.env.R2_BUCKET || 'gl-artifacts-prod';
+    // Prefer CF_ACCOUNT_ID for compatibility with previous code, but fall back to R2_ACCOUNT_ID
+    const accountId = process.env.CF_ACCOUNT_ID || process.env.R2_ACCOUNT_ID;
+    
     // Always try the direct uploader first if it's available,
     // regardless of R2_USE_DIRECT flag to solve SSL issues in CI
     try {
@@ -173,11 +179,6 @@ async function main() {
       // Generate a unique test key with org/repo structure but in a test directory
       // This ensures we don't conflict with the normal path but maintain structure
       const testKey = `${org}/${repo}/test-upload/${sha}/index.html`;
-      
-      // Use exact variable names matching GitHub secrets
-      const bucketName = process.env.R2_BUCKET || 'gl-artifacts-prod';
-      // Prefer CF_ACCOUNT_ID for compatibility with previous code, but fall back to R2_ACCOUNT_ID
-      const accountId = process.env.CF_ACCOUNT_ID || process.env.R2_ACCOUNT_ID;
       
       console.log(`Using bucket name: ${bucketName}`);
       console.log(`Using account ID: ${accountId ? '***' : 'undefined'}`);
