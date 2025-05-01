@@ -1,6 +1,6 @@
 // scripts/upload-preview.js
 import fs from "node:fs";
-import { putPreview } from "../api/r2-client.js";
+import { putPreview } from "../dist/api/r2-client.js";
 
 // Use async function wrapper since top-level await requires ES modules
 async function main() {
