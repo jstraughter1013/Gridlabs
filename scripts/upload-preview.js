@@ -124,7 +124,7 @@ async function main() {
       <h2>✨ Ready for Review</h2>
       <p>This preview deployment gives you a live environment to test your changes before merging.</p>
       <p>The SSL handshake issue has been fixed! Preview URLs now work correctly.</p>
-      <a href="https://github.com/jstraughter1013/Gridlabs/pull/${github.event.pull_request?.number || ''}" class="btn">View Pull Request</a>
+      <a href="https://github.com/${process.env.REPO_OWNER || 'jstraughter1013'}/${process.env.REPO_NAME || 'Gridlabs'}/pull/${process.env.PR_NUMBER || ''}" class="btn">View Pull Request</a>
       
       <div class="commit-info">
         <p>Commit: <strong>${shortCommit}</strong></p>
