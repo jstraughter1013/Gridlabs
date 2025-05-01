@@ -6,8 +6,13 @@
  * for accessing uploaded content.
  */
 
+// Import S3 SDK for presigned URL generation
 import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+// Import modules for direct upload functionality
+import fetch from 'node-fetch';
+import { createHmac } from 'crypto';
+import https from 'node:https';
 
 // R2 Configuration
 const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID || '';
@@ -35,9 +40,6 @@ console.log('Using account ID:', sanitizedAccountId);
 // Try the public dev endpoint format which may have different SSL config
 const endpoint = `https://${sanitizedAccountId}.r2.dev`;
 console.log('R2 endpoint URL:', endpoint);
-
-// Import node:https for custom agent options if needed
-import https from 'node:https';
 
 // Check if we're in CI environment
 const isCI = process.env.CI === 'true';
@@ -95,9 +97,7 @@ export async function generatePresignedUrl(key: string, contentType: string, exp
   }
 }
 
-// Import node-fetch for direct HTTP requests if not in Node.js environment
-import fetch from 'node-fetch';
-import { createHmac } from 'crypto';
+// All imports moved to the top of the file
 
 /**
  * Upload content to R2 storage using direct HTTP requests instead of AWS SDK
@@ -157,7 +157,7 @@ export async function putPreview(key: string, body: Buffer): Promise<any> {
         body: body,
         // Disable certificate validation in CI environments
         ...(process.env.CI === 'true' ? {
-          agent: new (require('https').Agent)({ rejectUnauthorized: false })
+          agent: new https.Agent({ rejectUnauthorized: false })
         } : {})
       });
       
