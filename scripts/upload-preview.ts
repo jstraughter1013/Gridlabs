@@ -1,7 +1,7 @@
 // scripts/upload-preview.ts
 import fs from "node:fs";
-// Import without the file extension
-import { putPreview } from "../api/r2-client.js";
+// Import without any file extension
+import { putPreview } from "../api/r2-client";
 
 // Use async function wrapper since top-level await requires ES modules
 async function main() {
