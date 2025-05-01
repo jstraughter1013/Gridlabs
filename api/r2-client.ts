@@ -10,6 +10,11 @@
 import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import https from 'node:https';
+import tls from 'node:tls';
+
+// Force modern TLS only - this prevents the SSLv3 handshake failures
+tls.DEFAULT_MIN_VERSION = 'TLSv1.2';
+tls.DEFAULT_MAX_VERSION = 'TLSv1.3';
 
 // R2 Configuration
 const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID || '';

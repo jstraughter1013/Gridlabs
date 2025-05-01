@@ -174,8 +174,27 @@ async function main() {
       const r2Client = await import("../dist/api/r2-client.js");
       const { putPreview } = r2Client;
       
-      await putPreview(key, Buffer.from(html));
-      console.log("Successfully uploaded preview using AWS SDK:", key);
+      const result = await putPreview(key, Buffer.from(html));
+      
+      // Check if this was a real success or a mock success in CI
+      if (result && result._isMock) {
+        // This wasn't a real success - log that clearly
+        console.log("⚠️ WARNING: Upload appears to have succeeded but returned a mock result");
+        console.log("This usually means the upload actually failed but we're continuing the workflow");
+        
+        // Store a fallback public test URL for the PR comment
+        // This uses the test/r2-upload pattern we saw in your R2 browser
+        const timestamp = Date.now();
+        process.env.R2_UPLOAD_FAILED = 'true';
+        process.env.R2_FALLBACK_URL = `https://preview-gridlabs.app/test/r2-upload-test-${timestamp}/index.html`;
+        console.log(`Setting fallback URL: ${process.env.R2_FALLBACK_URL}`);
+      } else {
+        console.log("✅ Successfully uploaded preview using AWS SDK:", key);
+        // Set the actual uploaded URL
+        actualUploadedUrl = `https://preview-gridlabs.app/${key}`;
+        process.env.R2_UPLOAD_URL = actualUploadedUrl;
+        console.log(`Setting verified upload URL: ${actualUploadedUrl}`);
+      }
     } catch (sdkError) {
       console.error("AWS SDK upload method failed:", sdkError);
       

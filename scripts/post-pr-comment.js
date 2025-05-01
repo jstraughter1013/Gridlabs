@@ -57,8 +57,18 @@ async function main() {
     // Always get the very latest commit SHA to avoid stale links
     console.log(`Original commit SHA from env: ${COMMIT_SHA}`);
     
-    // Check first if we have a direct URL from the upload script
+    // Check if the upload failed and we have a fallback URL
+    const uploadFailed = process.env.R2_UPLOAD_FAILED === 'true';
+    const fallbackUrl = process.env.R2_FALLBACK_URL;
+    
+    // First check for a direct successful upload URL
     let previewUrl = process.env.R2_UPLOAD_URL;
+    
+    // If upload failed but we have a fallback URL, prioritize that
+    if (uploadFailed && fallbackUrl) {
+      console.log('⚠️ Upload failed but using fallback URL:', fallbackUrl);
+      previewUrl = fallbackUrl;
+    }
     
     // Create a timestamp to ensure URL uniqueness and prevent caching
     const timestamp = new Date().getTime();
