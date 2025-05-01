@@ -9,7 +9,13 @@ async function main() {
     const PR_NUMBER = process.env.PR_NUMBER || '';
     const REPO_OWNER = process.env.REPO_OWNER || '';
     const REPO_NAME = process.env.REPO_NAME || '';
-    const COMMIT_SHA = process.env.COMMIT_SHA || process.env.GITHUB_SHA;
+    
+    // CRITICAL: Always prioritize GitHub's workflow SHA over the PR head SHA
+    // process.env.GITHUB_SHA is the actual merge commit SHA that GitHub Actions is running on
+    const COMMIT_SHA = process.env.GITHUB_SHA || process.env.COMMIT_SHA;
+    console.log('Using GITHUB_SHA:', process.env.GITHUB_SHA);
+    console.log('Original COMMIT_SHA:', process.env.COMMIT_SHA);
+    
     const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID || '';
     const R2_BUCKET = process.env.R2_BUCKET || 'gl-artifacts-prod';
     
@@ -51,26 +57,14 @@ async function main() {
     // Always get the very latest commit SHA to avoid stale links
     console.log(`Original commit SHA from env: ${COMMIT_SHA}`);
     
-    // This will force us to use the exact SHA from this current run
-    let latestSha;
-    try {
-      // Try to get the SHA from this exact workflow run
-      latestSha = process.env.GITHUB_SHA || COMMIT_SHA;
-      console.log(`Latest commit SHA from GitHub Actions: ${latestSha}`);
-      sha = latestSha.substring(0, 7); // Use the latest SHA for the URL
-    } catch (err) {
-      console.log(`Using original SHA: ${sha}`); 
-    }
-    
-    // Create a timestamp to ensure URL uniqueness
+    // Create a timestamp to ensure URL uniqueness and prevent caching
     const timestamp = new Date().getTime();
     
-    // Force using the direct path that matches exactly what r2-upload.js uses
-    const directPath = `${owner}/${repo}/smoke/${sha}/index.html?t=${timestamp}`;
-    const previewUrl = `https://preview-gridlabs.app/${directPath}`;
+    // Build URL with timestamp to force cache refresh
+    const previewUrl = `https://preview-gridlabs.app/${owner}/${repo}/smoke/${sha}/index.html?t=${timestamp}`;
     
-    // Create link with cache-busting parameter
-    console.log(`Using URL with current SHA and timestamp: ${previewUrl}`);
+    // Log it for debugging
+    console.log(`Using URL with timestamp for cache-busting: ${previewUrl}`);
     
     // Create the comment body
     const commentBody = `## 🚀 Preview Ready!
