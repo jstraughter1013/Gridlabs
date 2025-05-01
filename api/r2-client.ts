@@ -14,7 +14,7 @@ const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID || '';
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || '';
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || '';
 const R2_BUCKET_NAME = process.env.R2_BUCKET || 'gl-artifacts-prod';
-const PUBLIC_URL_BASE = process.env.PUBLIC_URL_BASE || 'https://gridlabs-preview.windsurf.io';
+const PUBLIC_URL_BASE = process.env.PUBLIC_URL_BASE || 'https://preview-gridlabs.app';
 
 // Create an S3 client configured for Cloudflare R2
 // First, let's log what we're working with
@@ -168,10 +168,6 @@ export async function putPreview(key: string, body: Buffer): Promise<any> {
  * @returns {string} A public URL for accessing the content
  */
 export function generatePublicUrl(org: string, repo: string, branch: string, sha: string): string {
-  // Bucket is public, so don't sign URLs
-  if (process.env.R2_USE_SDK === 'true') {
-    // Use the same sanitized account ID variable created earlier
-    return `https://${sanitizedAccountId}.r2.cloudflarestorage.com/${R2_BUCKET_NAME}/${org}/${repo}/${branch}/${sha}/index.html`;
-  }
+  // Always use the public preview domain now that it's available
   return `${PUBLIC_URL_BASE}/${org}/${repo}/${branch}/${sha}/index.html`;
 }
