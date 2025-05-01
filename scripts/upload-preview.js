@@ -6,9 +6,9 @@ async function main() {
   try {
     // Debug output for environment variables
     console.log('Environment variables for debugging:');
-    console.log('CF_ACCOUNT_ID:', process.env.CF_ACCOUNT_ID);
-    console.log('R2_ACCOUNT_ID:', process.env.R2_ACCOUNT_ID);
-    console.log('R2_BUCKET:', process.env.R2_BUCKET);
+    console.log('CF_ACCOUNT_ID:', process.env.CF_ACCOUNT_ID ? '***' : 'undefined');
+    console.log('R2_ACCOUNT_ID:', process.env.R2_ACCOUNT_ID ? '***' : 'undefined');
+    console.log('R2_BUCKET:', process.env.R2_BUCKET ? '***' : 'undefined');
     console.log('R2_BUCKET_NAME:', process.env.R2_BUCKET_NAME);
     console.log('R2_USE_DIRECT:', process.env.R2_USE_DIRECT);
     
@@ -16,7 +16,13 @@ async function main() {
     if (process.env.CF_ACCOUNT_ID && process.env.CF_ACCOUNT_ID.endsWith('.')) {
       console.log('WARNING: Trailing period detected in CF_ACCOUNT_ID, fixing it.');
       process.env.CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID.replace(/\.+$/, '');
-      console.log('Sanitized CF_ACCOUNT_ID:', process.env.CF_ACCOUNT_ID);
+      console.log('Sanitized CF_ACCOUNT_ID:', '***');
+    }
+    
+    // Ensure R2_ACCOUNT_ID is set to CF_ACCOUNT_ID as fallback if needed
+    if (!process.env.R2_ACCOUNT_ID && process.env.CF_ACCOUNT_ID) {
+      console.log('Setting R2_ACCOUNT_ID from CF_ACCOUNT_ID for consistency');
+      process.env.R2_ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
     }
     
     const commit = process.env.GITHUB_SHA ?? "local";
@@ -161,6 +167,17 @@ async function main() {
     // Prefer CF_ACCOUNT_ID for compatibility with previous code, but fall back to R2_ACCOUNT_ID
     const accountId = process.env.CF_ACCOUNT_ID || process.env.R2_ACCOUNT_ID;
     
+    // Validate credentials before proceeding
+    if (!accountId) {
+      console.error("ERROR: No account ID found. Neither CF_ACCOUNT_ID nor R2_ACCOUNT_ID is set.");
+      throw new Error("Missing required account ID for R2 upload");
+    }
+    
+    if (!process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
+      console.error("ERROR: Missing R2 access credentials. Check R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY.");
+      throw new Error("Missing required R2 credentials for upload");
+    }
+    
     // Always try the direct uploader first if it's available,
     // regardless of R2_USE_DIRECT flag to solve SSL issues in CI
     try {
@@ -228,9 +245,15 @@ async function main() {
       const r2Client = await import("../dist/api/r2-client.js");
       const { putPreview, setR2Credentials } = r2Client;
       
+      // Ensure we have a valid accountId before continuing
+      if (!accountId) {
+        throw new Error("Missing required accountId for R2 upload");
+      }
+      
       // Explicitly set the R2 credentials before uploading
-      console.log(`Setting explicit R2 credentials with accountId: ${accountId ? '***' : 'undefined'}`);
-      console.log(`Setting explicit R2 credentials with bucket: ${bucketName}`);
+      console.log(`CF_ACCOUNT_ID value: ${process.env.CF_ACCOUNT_ID ? '***' : 'undefined'}`);
+      console.log(`R2_BUCKET value: ${bucketName ? '***' : 'undefined'}`);
+      console.log(`Using account ID: ${accountId ? '***' : 'undefined'}`);
       
       // Explicitly set credentials to ensure consistency
       setR2Credentials({

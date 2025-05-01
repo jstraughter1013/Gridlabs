@@ -64,8 +64,14 @@ if (!CF_ACCOUNT_ID || CF_ACCOUNT_ID.trim() === '') {
   console.log('WARNING: CF_ACCOUNT_ID is empty! Using a placeholder for now.');
 }
 
-// Apply fallback and sanitize
-const sanitizedAccountId = (CF_ACCOUNT_ID || 'missing-account-id').replace(/\.+$/, '');
+// Apply fallback and sanitize - prefer R2_ACCOUNT_ID if CF_ACCOUNT_ID is empty
+const accountId = CF_ACCOUNT_ID || R2_ACCOUNT_ID || '';
+if (!accountId || accountId.trim() === '') {
+  console.error('ERROR: Both CF_ACCOUNT_ID and R2_ACCOUNT_ID are empty or undefined!');
+  throw new Error('Missing required account ID for R2 client configuration');
+}
+
+const sanitizedAccountId = accountId.replace(/\.+$/, '');
 console.log('Using account ID:', sanitizedAccountId);
 
 // Build endpoint URL with sanitized account ID
