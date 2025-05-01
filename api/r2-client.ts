@@ -9,9 +9,6 @@
 // Import S3 SDK for presigned URL generation
 import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-// Import modules for direct upload functionality
-import fetch from 'node-fetch';
-import { createHmac } from 'crypto';
 import https from 'node:https';
 
 // R2 Configuration
@@ -37,8 +34,8 @@ console.log('Using account ID:', sanitizedAccountId);
 
 // Build endpoint URL with sanitized account ID
 // Make sure we don't include R2_BUCKET in the hostname
-// Try the public dev endpoint format which may have different SSL config
-const endpoint = `https://${sanitizedAccountId}.r2.dev`;
+// Use r2.cloudflarestorage.com endpoint with forcePathStyle: true to prevent 500 errors
+const endpoint = `https://${sanitizedAccountId}.r2.cloudflarestorage.com`;
 console.log('R2 endpoint URL:', endpoint);
 
 // Check if we're in CI environment
@@ -100,7 +97,7 @@ export async function generatePresignedUrl(key: string, contentType: string, exp
 // All imports moved to the top of the file
 
 /**
- * Upload content to R2 storage using direct HTTP requests instead of AWS SDK
+ * Upload content to R2 storage directly using AWS SDK with recommended settings
  * 
  * @param key - The object key (path) in the bucket
  * @param body - The content to upload as a Buffer
@@ -112,68 +109,35 @@ export async function putPreview(key: string, body: Buffer): Promise<any> {
     console.log(`Uploading ${key} to R2 bucket ${R2_BUCKET_NAME}...`);
     console.log(`Upload size: ${body.length} bytes`);
     
-    // Log credentials status without exposing actual values
+    // Log connection details
     console.log('Connection details:', {
       endpoint: endpoint,
+      region: 'auto',
       bucket: R2_BUCKET_NAME,
       hasCredentials: !!R2_ACCESS_KEY_ID && !!R2_SECRET_ACCESS_KEY,
     });
-
-    // For direct upload, we'll use the r2.dev endpoint which should be more reliable
-    const directUploadEndpoint = `https://${sanitizedAccountId}.r2.dev/${R2_BUCKET_NAME}/${key}`;
-    console.log('Using direct upload URL:', directUploadEndpoint);
     
-    // Create date string for AWS S3 authentication
-    const now = new Date();
-    const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
-    const dateStamp = amzDate.slice(0, 8);
+    // Create PutObjectCommand with ContentLength to prevent 500 errors
+    const putCommand = new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME,
+      Key: key,
+      Body: body,
+      ContentType: 'text/html',
+      ContentLength: body.length // Add ContentLength to prevent 500 errors
+    });
     
-    // Set up request headers
-    const contentType = 'text/html';
-    const headers: Record<string, string> = {
-      'Content-Type': contentType,
-      'x-amz-date': amzDate,
-      'x-amz-content-sha256': 'UNSIGNED-PAYLOAD'
-    };
-    
-    // Add authorization header using AWS Signature V4
-    if (R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY) {
-      try {
-        // Simple path for authentication - this is a fallback approach
-        headers['Authorization'] = `AWS4-HMAC-SHA256 Credential=${R2_ACCESS_KEY_ID}/${dateStamp}/auto/s3/aws4_request`;
-      } catch (authError) {
-        console.warn('Error generating authorization header:', authError);
-        // Continue without auth header and let it fail on the server side
-      }
-    }
-    
-    console.log('Sending direct HTTP PUT request...');
+    console.log('Sending PutObjectCommand...');
     
     try {
-      // Make direct HTTP PUT request to R2
-      const response = await fetch(directUploadEndpoint, {
-        method: 'PUT',
-        headers: headers,
-        body: body,
-        // Disable certificate validation in CI environments
-        ...(process.env.CI === 'true' ? {
-          agent: new https.Agent({ rejectUnauthorized: false })
-        } : {})
+      // Send the command to upload the file
+      const result = await r2.send(putCommand);
+      console.log(`Successfully uploaded ${key} to R2:`, {
+        etag: result.ETag,
       });
-      
-      if (response.ok) {
-        console.log(`Successfully uploaded ${key} to R2 (HTTP ${response.status})`);
-        return {
-          ETag: response.headers.get('ETag'),
-          statusCode: response.status
-        };
-      } else {
-        const errorText = await response.text();
-        throw new Error(`HTTP Error ${response.status}: ${errorText}`);
-      }
-    } catch (fetchError) {
-      console.error('Fetch error during direct upload:', fetchError);
-      throw fetchError;
+      return result;
+    } catch (uploadError) {
+      console.error('Error in PutObjectCommand:', uploadError);
+      throw uploadError;
     }
   } catch (error) {
     console.error(`Failed to upload ${key} to R2:`, error);

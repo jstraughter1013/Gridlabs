@@ -106,12 +106,13 @@ async function main() {
 </body>
 </html>`;
     
-    // Use proper path structure to match what the PR comment expects
-    const repo = process.env.GITHUB_REPOSITORY ?? "owner/repo";
-    // For PRs, GITHUB_HEAD_REF contains the source branch name
+    // structured – recommended if you'll keep many previews:
+    const org    = process.env.GITHUB_REPOSITORY_OWNER;              // "jstraughter1013"
+    const repo   = process.env.GITHUB_REPOSITORY?.split('/')[1] || "Gridlabs";      // "Gridlabs"
     const branch = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || "branch";
-    console.log(`Using branch: ${branch} for the upload path`);
-    const key = `${repo}/${branch}/${commit}/index.html`;
+    const sha    = commit.slice(0,7);
+    const key    = `${org}/${repo}/smoke/${sha}/index.html`;
+    console.log(`Using structured key: ${key} for the upload path`);
 
     await putPreview(key, Buffer.from(html));
     console.log("Uploaded preview:", key);
