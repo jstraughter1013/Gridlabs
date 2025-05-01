@@ -45,8 +45,12 @@ async function main() {
       auth: GITHUB_TOKEN
     });
     
-    // Generate preview URL using the new preview domain
-    const previewUrl = `https://preview-gridlabs.app/${owner}/${repo}/smoke/${COMMIT_SHA.substring(0, 7)}/index.html`;
+    // Get the branch name using the same logic as upload-preview.js
+    const branch = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || 'branch';
+    console.log(`Using branch: ${branch} for the preview URL`);
+    
+    // Generate preview URL using the new preview domain with the correct branch
+    const previewUrl = `https://preview-gridlabs.app/${owner}/${repo}/${branch}/${COMMIT_SHA.substring(0, 7)}/index.html`;
     
     // Create the comment body
     const commentBody = `## 🚀 Preview Ready!

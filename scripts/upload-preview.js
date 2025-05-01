@@ -108,7 +108,9 @@ async function main() {
     
     // Use proper path structure to match what the PR comment expects
     const repo = process.env.GITHUB_REPOSITORY ?? "owner/repo";
-    const branch = process.env.GITHUB_REF_NAME ?? "branch";
+    // For PRs, GITHUB_HEAD_REF contains the source branch name
+    const branch = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || "branch";
+    console.log(`Using branch: ${branch} for the upload path`);
     const key = `${repo}/${branch}/${commit}/index.html`;
 
     await putPreview(key, Buffer.from(html));
