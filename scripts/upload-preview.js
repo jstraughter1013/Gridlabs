@@ -31,10 +31,20 @@ async function main() {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GridLabs Preview - ${shortCommit}</title>
   <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #4338ca;
+      --success: #10b981;
+      --background: #f9fafb;
+      --card-bg: #ffffff;
+      --text: #1f2937;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      background-color: #f5f8fa;
-      color: #24292e;
+      background-color: var(--background);
+      color: var(--text);
       margin: 0;
       padding: 0;
       display: flex;
@@ -43,39 +53,62 @@ async function main() {
       min-height: 100vh;
     }
     .container {
-      max-width: 800px;
+      max-width: 850px;
       margin: 0 auto;
-      padding: 2rem;
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 2.5rem;
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
       text-align: center;
     }
     .header {
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid #e1e4e8;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
     }
     .preview-badge {
       display: inline-block;
-      padding: 0.5rem 1rem;
-      background-color: #2ea44f;
+      padding: 0.5rem 1.25rem;
+      background-color: var(--success);
       color: white;
-      border-radius: 20px;
+      border-radius: 9999px;
       font-size: 0.9rem;
+      font-weight: 500;
       margin-bottom: 1rem;
+      box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2);
     }
     .commit-info {
-      background-color: #f6f8fa;
-      padding: 1rem;
-      border-radius: 6px;
-      margin-top: 2rem;
-      font-family: monospace;
+      background-color: var(--background);
+      padding: 1.25rem;
+      border-radius: 8px;
+      margin-top: 2.5rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      transition: transform 0.2s;
+    }
+    .commit-info:hover {
+      transform: translateY(-2px);
     }
     .footer {
-      margin-top: 2rem;
-      font-size: 0.8rem;
-      color: #6a737d;
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+    .btn {
+      display: inline-block;
+      background-color: var(--primary);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+      margin-top: 1.5rem;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    .btn:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-1px);
     }
   </style>
 </head>
@@ -84,21 +117,24 @@ async function main() {
     <div class="header">
       <div class="preview-badge">Preview Build</div>
       <h1>GridLabs UI Preview</h1>
-      <p>This is an automatically generated preview of your changes</p>
+      <p>This preview environment shows the latest changes from your pull request</p>
     </div>
     
     <div class="content">
-      <h2>Ready to Review</h2>
-      <p>This preview was created to help you visualize your changes before merging.</p>
+      <h2>✨ Ready for Review</h2>
+      <p>This preview deployment gives you a live environment to test your changes before merging.</p>
+      <p>The SSL handshake issue has been fixed! Preview URLs now work correctly.</p>
+      <a href="https://github.com/jstraughter1013/Gridlabs/pull/${github.event.pull_request?.number || ''}" class="btn">View Pull Request</a>
       
       <div class="commit-info">
         <p>Commit: <strong>${shortCommit}</strong></p>
+        <p>Branch: <strong>${process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || 'unknown'}</strong></p>
         <p>Generated: <strong>${date}</strong></p>
       </div>
     </div>
     
     <div class="footer">
-      <p>GridLabs CI/CD Pipeline - Powered by GitHub Actions</p>
+      <p>GridLabs CI/CD Pipeline — Powered by GitHub Actions &amp; Cloudflare R2</p>
     </div>
   </div>
 </body>
